@@ -441,6 +441,18 @@
     return modeLabel(leg.transportMode || leg.mode);
   }
 
+  function legBadgeText(leg) {
+    return leg.lineCode || modeLabel(leg.transportMode || leg.mode);
+  }
+
+  function legBadgeClass(leg) {
+    var text = String(legBadgeText(leg) || "");
+    if (text.length > 3) {
+      return " trip-leg__badge--compact";
+    }
+    return "";
+  }
+
   function lineStyleAttr(leg) {
     if (!leg.colour) {
       return "";
@@ -461,10 +473,12 @@
         var badge =
           leg.mode === "foot"
             ? '<span class="trip-leg__badge trip-leg__badge--walk">Gå</span>'
-            : '<span class="trip-leg__badge"' +
+            : '<span class="trip-leg__badge' +
+              legBadgeClass(leg) +
+              '"' +
               lineStyleAttr(leg) +
               ">" +
-              escapeHtml(leg.lineCode || modeLabel(leg.transportMode)) +
+              escapeHtml(legBadgeText(leg)) +
               "</span>";
         var headsign = legHeadsign(leg);
         var headsignHtml = headsign

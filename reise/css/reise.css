@@ -411,19 +411,25 @@
   flex-direction: column;
   align-items: center;
   gap: 0.2rem;
-  width: 2.6rem;
+  width: 2.5rem;
 }
 
 .trip-leg__badge {
-  flex-shrink: 0;
-  width: 2.4rem;
-  height: 2.4rem;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
+  box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.35rem;
   font-weight: 700;
-  font-size: 0.95rem;
+  font-size: 0.72rem;
+  line-height: 1;
+  letter-spacing: -0.02em;
+  padding: 0.12rem;
+  overflow: hidden;
+  text-align: center;
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   border: 1px solid var(--line);
 }
@@ -433,12 +439,18 @@
   line-height: 1.15;
   color: var(--muted);
   text-align: center;
-  max-width: 2.6rem;
+  max-width: 2.5rem;
 }
 
 .trip-leg__badge--walk {
-  font-size: 0.78rem;
+  font-size: 0.72rem;
   color: var(--muted);
+}
+
+.trip-leg__badge--compact {
+  font-size: 0.56rem;
+  letter-spacing: -0.04em;
+  padding: 0.08rem;
 }
 
 .trip-leg__body {
