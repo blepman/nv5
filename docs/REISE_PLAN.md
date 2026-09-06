@@ -43,7 +43,7 @@ Alt under `env-nv5` organiseres i **app-mapper** for oversikt og gjenbruk:
 
 ```
 env-nv5/                          # Cursor Cloud-miljø / mono-repo-roten
-├── sis/                          # nv5-sis (sanntidstavle) — app + ev. env-spesifikke filer
+├── sis/                          # SIS (sanntidstavle) — app + ev. env-spesifikke filer
 ├── reise/                        # nv5-reise (planlegger) — app + ev. env-spesifikke filer
 ├── shared/                       # Delte moduler (Entur, tokens, utils)
 └── docs/                         # Felles dokumentasjon (denne planen, kunnskap)

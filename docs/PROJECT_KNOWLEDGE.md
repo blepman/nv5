@@ -1,4 +1,4 @@
-# Prosjektkunnskap — nv5-sis
+# Prosjektkunnskap — nv5
 
 Levende kunnskapsbase for mennesker og agenter.  
 **Oppdater denne fila** når samtalen eller arbeidet avdekker noe som er verdt å huske.
@@ -157,7 +157,7 @@ Fra `js/entur.js`: avganger, realtime, delay, situasjoner, occupancy (ofte `noDa
 
 ## 6. Tognr / vognløp (eget spor)
 
-**Utenfor nv5-sis.** Egen idé om å predikere Hastus-vognløp fra `privateCode` + kalibrering.
+**Utenfor nv5.** Egen idé om å predikere Hastus-vognløp fra `privateCode` + kalibrering.
 
 Kort fakta (detaljer og kode ligger i separat handoff hos eier / evt. privat `Tognr`-repo):
 
@@ -167,7 +167,7 @@ Kort fakta (detaljer og kode ligger i separat handoff hos eier / evt. privat `To
 - Snu Østerås (empiri): retur-`privateCode` ≈ vest − **479**, layover ~6 min — tids-par, ikke bevis for samme fysiske sett.
 - `privateCode` er **ikke** stabil gjennom snu/døgnet.
 
-**Regel for dette repoet:** ikke merge Tognr-algoritme eller store handoff-dokumenter inn i nv5-sis med mindre brukeren eksplisitt ber om det. Én setning + peker her er nok.
+**Regel for dette repoet:** ikke merge Tognr-algoritme eller store handoff-dokumenter inn i nv5 med mindre brukeren eksplisitt ber om det. Én setning + peker her er nok.
 
 ---
 
@@ -190,7 +190,7 @@ Kort fakta (detaljer og kode ligger i separat handoff hos eier / evt. privat `To
 - La ticker arve full featured-radhøyde.
 - Legge situasjonsstripe langs hele teksten i stedet for badge-stack.
 - Store wireframe-dokumenter som «hjelp» for mobil-eier.
-- Laste opp undersøkelses-CSV / Tognr-handoff til GitHub i nv5-sis uten forespørsel.
+- Laste opp undersøkelses-CSV / Tognr-handoff til GitHub i nv5 uten forespørsel.
 - Redesigne hele kiosken når oppgaven er en liten footer-/layout-fiks.
 
 ---

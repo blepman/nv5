@@ -1,6 +1,6 @@
-# nv5-sis (env-nv5)
+# nv5 (env-nv5)
 
-Mono-repo for NV5-appene på `nv5.haatetepe.no`.
+Mono-repo for NV5-appene på `nv5.haatetepe.no`. GitHub: `blepman/nv5` (privat).
 
 | App | Live | Mappe |
 |-----|------|-------|
