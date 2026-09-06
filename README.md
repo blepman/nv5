@@ -50,6 +50,8 @@ På prod ligger webroot og secrets side om side:
 
 Én fil per variabel; innholdet er bare verdien (én linje, ingen `KEY=`).
 
+**Viktig:** Sync henter kode fra GitHub — den oppretter **ikke** passordfilen. Du må lage `NV5_ADMIN_PASSWORD` manuelt på serveren.
+
 PHP leser i rekkefølge: `getenv()` → fil i `env/env-nv5/` → state-mappe (fallback).
 
 ## State og sikkerhet
