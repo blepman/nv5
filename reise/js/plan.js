@@ -350,20 +350,15 @@
     return leg.lineDestination;
   }
 
-  function quayPlatformLabel(placeName, quayCode, headsign) {
+  function quayPlatformLabel(placeName, quayCode) {
     if (!quayCode) {
       return "";
     }
-    var label = (placeName || "Holdeplass") + " pltf. " + quayCode;
-    var dest = String(headsign || "").trim();
-    if (dest) {
-      label += " " + dest;
-    }
-    return label;
+    return (placeName || "Holdeplass") + " pltf. " + quayCode;
   }
 
-  function legStopLabel(name, quayCode, headsign) {
-    return quayPlatformLabel(name, quayCode, headsign) || name || "";
+  function legStopLabel(name, quayCode) {
+    return quayPlatformLabel(name, quayCode) || name || "";
   }
 
   function renderRouteBadge(leg) {
@@ -443,11 +438,7 @@
       }
     }
     return (
-      legStopLabel(
-        leg.fromName,
-        leg.fromQuay,
-        leg.mode !== "foot" ? leg.lineDestination : ""
-      ) +
+      legStopLabel(leg.fromName, leg.fromQuay) +
       " → " +
       legStopLabel(leg.toName, leg.toQuay)
     );
