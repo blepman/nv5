@@ -1,0 +1,148 @@
+@import url("/shared/css/tokens.css");
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-height: 100vh;
+  font-family: "IBM Plex Sans", system-ui, sans-serif;
+  background: var(--bg);
+  color: var(--text);
+}
+
+.admin {
+  max-width: 40rem;
+  margin: 0 auto;
+  padding: 1.5rem 1rem 2rem;
+}
+
+.admin__header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.admin__tagline {
+  margin: 0.35rem 0 0;
+  color: var(--text-muted);
+}
+
+.admin__apps {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  margin: 1.5rem 0;
+}
+
+.admin__app {
+  flex: 1 1 10rem;
+  padding: 0.85rem 1rem;
+  border-radius: 0.65rem;
+  background: var(--bg-lift);
+  color: var(--text);
+  text-decoration: none;
+  font-weight: 600;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+}
+
+.admin__app:hover {
+  border-color: var(--accent);
+}
+
+.admin__panel {
+  margin-top: 1.25rem;
+  padding: 1rem 1.1rem;
+  border-radius: 0.75rem;
+  background: var(--bg-lift);
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+.admin__panel h2 {
+  margin: 0 0 0.5rem;
+  font-size: 1.05rem;
+}
+
+.admin__hint {
+  margin: 0 0 1rem;
+  color: var(--text-muted);
+  font-size: 0.92rem;
+  line-height: 1.45;
+}
+
+.admin__hint code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.85em;
+}
+
+.admin__actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
+.admin__btn {
+  padding: 0.55rem 0.9rem;
+  border: none;
+  border-radius: 0.5rem;
+  background: var(--accent);
+  color: #fff;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+
+.admin__btn--ghost {
+  background: transparent;
+  color: var(--text);
+  border: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+.admin__btn--wide {
+  width: 100%;
+}
+
+.admin__btn:hover {
+  filter: brightness(1.08);
+}
+
+.admin__shas {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 0.75rem 1rem;
+  margin: 0;
+}
+
+.admin__shas dt {
+  font-size: 0.8rem;
+  color: var(--text-muted);
+  margin-bottom: 0.15rem;
+}
+
+.admin__shas dd {
+  margin: 0;
+}
+
+.admin__shas code {
+  font-family: "IBM Plex Mono", monospace;
+  font-size: 0.95rem;
+}
+
+.admin__local {
+  margin: 1rem 0 0;
+  padding: 0.75rem;
+  border-radius: 0.5rem;
+  background: rgba(255, 200, 80, 0.08);
+  color: var(--text-muted);
+  font-size: 0.9rem;
+}
+
+.admin__footer {
+  margin-top: 2rem;
+  text-align: center;
+  color: var(--text-muted);
+  font-size: 0.85rem;
+}

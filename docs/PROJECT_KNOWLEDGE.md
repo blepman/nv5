@@ -15,10 +15,12 @@ Levende kunnskapsbase for mennesker og agenter.
 
 | App | URL | Formål |
 |---|---|---|
+| **Admin** | `https://nv5.haatetepe.no/admin/` | Drift: server, shared, miljø-sync |
 | **SIS** | `https://nv5.haatetepe.no/sis/` | Sanntidstavle (kiosk / PWA) |
 | **Reise** | `https://nv5.haatetepe.no/reise/` | Reiseplanlegger (eget spor) |
 
-Miljø: `env-nv5`. Repo-struktur (mål): `sis/`, `reise/`, `shared/`, `docs/`.  
+Miljø: `env-nv5`. Repo-struktur: `admin/`, `sis/`, `reise/`, `shared/`, `docs/`.  
+Delt kode serveres fra **`/shared/`** — ikke dupliseres per app ved sync.  
 Full plan: [`docs/REISE_PLAN.md`](REISE_PLAN.md).
 
 ---
@@ -43,13 +45,22 @@ Klientnavn mot Entur: `haatetepe-nv5-sis` (`config.js`).
 
 | Branch | Rolle |
 |---|---|
-| `main` | Tavle: HTML/CSS/JS under repo-roten |
-| `server` | PHP som speiler seg selv til `/sis/` og speiler `main` → `content/` |
+| `main` | Apper: `admin/`, `sis/`, `reise/`, `shared/`, `docs/` |
+| `server` | PHP som speiler seg selv + `main/shared/` → `/shared/` |
 
 Feature-branches: navn må inneholde `main` eller `server` etter mål.
 
-**Sync (bevisst åpen):** `?sync=main` | `?sync=server` | `?sync=both` (eller `?sync=1`).  
-Tillit ligger i GitHub-skrivetilgang, ikke i en sync-nøkkel.
+**Sync (bevisst åpen):**
+
+| Sted | Param | Effekt |
+|---|---|---|
+| `/admin/` | `?sync=env` | Server + shared |
+| `/admin/` | `?sync=all` | Alt |
+| `/sis/` | `?sync=sis` | Kun tavle (`main/sis/`) |
+| `/reise/` | `?sync=reise` | Kun planlegger |
+| `/sis/` | `?sync=both` | Legacy: sis + server |
+
+`?sync=main` er alias for `?sync=sis`. Server/shared styres fra **Admin**, ikke SIS-menyen.
 
 **Innstillinger:** `localStorage` (`nv5-sis-settings`) + cookie for GitHub-sjekkintervall (PHP leser cookien). Minimum intervall 60s; bruk `?sync=` for øyeblikkelig sjekk.
 
@@ -61,9 +72,10 @@ Tillit ligger i GitHub-skrivetilgang, ikke i en sync-nøkkel.
 
 | Mappe | Rolle |
 |---|---|
+| `admin/` | Drift-UI, sync-knapper |
 | `sis/` | Tavle: HTML/CSS/JS, icons, manifest |
-| `reise/` | Planlegger (under utvikling) |
-| `shared/` | `entur.js`, `util.js`, `tokens.css`, fonts |
+| `reise/` | Planlegger |
+| `shared/` | `entur.js`, `util.js`, `tokens.css`, fonts — URL `/shared/` |
 | `docs/` | Kunnskap og planer |
 
 ---
