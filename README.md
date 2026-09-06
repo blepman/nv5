@@ -34,13 +34,31 @@ Raw: https://raw.githubusercontent.com/blepman/nv5-sis/server/index-initial.php
 
 SIS-innstillinger (cookie `nv5_github_interval`) styrer automatisk sjekk av **kun SIS**-innhold.
 
+## Host-layout (env-nv5)
+
+På prod ligger webroot og secrets side om side:
+
+```
+(konto-roten)/
+├── www/                 # webroot — admin/, sis/, reise/, shared/, …
+└── env/
+    └── env-nv5/         # hemmeligheter (ikke HTTP-tilgjengelig)
+        ├── NV5_ADMIN_PASSWORD
+        ├── NV5_ADMIN_USER          # valgfri, standard admin
+        └── NV5_SYNC_SERVER_KEY     # valgfri, for ?sync=server
+```
+
+Én fil per variabel; innholdet er bare verdien (én linje, ingen `KEY=`).
+
+PHP leser i rekkefølge: `getenv()` → fil i `env/env-nv5/` → state-mappe (fallback).
+
 ## State og sikkerhet
 
 - State/lock i system-temp (`sys_get_temp_dir()/nv5-sis-…`)
 - Rot-`.htaccess` slår av mappevisning i site root; `nv5-lib/` er ikke web-tilgjengelig
-- `/admin/` krever HTTP Basic Auth når `NV5_ADMIN_PASSWORD` er satt (brukernavn: `admin`, eller `NV5_ADMIN_USER`)
-- Alternativ uten env: skriv passordet til `admin-password` i state-mappen (utenfor webroot)
-- `?sync=server` kan kreve nøkkel (`NV5_SYNC_SERVER_KEY` eller `sync-server-secret` i state)
+- `/admin/` krever HTTP Basic Auth når `NV5_ADMIN_PASSWORD` er satt (fil i `env/env-nv5/` eller env)
+- Alternativ uten env-mappe: skriv passordet til `admin-password` i state-mappen (utenfor webroot)
+- `?sync=server` kan kreve nøkkel (`NV5_SYNC_SERVER_KEY` i `env/env-nv5/` eller `sync-server-secret` i state)
 - Rate limit per IP på tvungen sync
 - Audit: `sync-audit.log` i state-mappen
 - `index-initial.php` speiles **ikke** til webroot ved vanlig server-sync — slett etter bruk
