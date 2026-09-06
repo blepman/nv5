@@ -276,18 +276,19 @@ if (!$isPost) {
         . 'lager <code>env/env-nv5/config.php</code> ved siden av <code>www/</code>, og synker innhold.</p>'
         . '<p><small>Mappen kan være tom — <code>admin/</code>, <code>sis/</code> og resten opprettes under oppsettet.</small></p>'
         . '<form method="post" action="">'
-        . '<label for="github_token">GitHub token (PAT)</label>'
-        . '<input id="github_token" name="github_token" type="password" autocomplete="off" minlength="10" required>'
-        . '<p><small>Påkrevd for privat repo. Fine-grained eller classic PAT med <strong>read</strong> på <code>' . htmlspecialchars(NV5_INIT_REPO, ENT_QUOTES, 'UTF-8') . '</code>.</small></p>'
         . '<label for="admin_user">Admin-bruker</label>'
         . '<input id="admin_user" name="admin_user" value="admin" autocomplete="username" required>'
         . '<label for="admin_password">Admin-passord</label>'
         . '<input id="admin_password" name="admin_password" type="password" autocomplete="new-password" minlength="8" required>'
         . '<label for="admin_password_confirm">Bekreft passord</label>'
         . '<input id="admin_password_confirm" name="admin_password_confirm" type="password" autocomplete="new-password" minlength="8" required>'
+        . '<label for="github_token">GitHub token (PAT)</label>'
+        . '<input id="github_token" name="github_token" type="password" autocomplete="off" minlength="10" required>'
+        . '<p><small>Påkrevd for privat repo. Fine-grained: <strong>Contents: Read-only</strong> på <code>' . htmlspecialchars(NV5_INIT_REPO, ENT_QUOTES, 'UTF-8') . '</code>. Classic: <strong>repo</strong>.</small></p>'
         . '<p><small>Token og passord lagres i <code>env/env-nv5/config.php</code> (utenfor webroot).</small></p>'
         . '<button class="btn" type="submit">Start oppsett</button>'
         . '</form>'
+        . '<p><small>nv5-init · ' . htmlspecialchars(NV5_INIT_REPO, ENT_QUOTES, 'UTF-8') . '/' . NV5_INIT_SERVER_BRANCH . '</small></p>'
     );
     exit;
 }
