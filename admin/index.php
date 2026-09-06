@@ -6,7 +6,7 @@ if (!is_file($lib)) {
     http_response_code(503);
     header('Content-Type: text/html; charset=utf-8');
     echo '<!DOCTYPE html><html lang="nb"><meta charset="utf-8"><title>NV5 Admin</title>';
-    echo '<h1>Admin er ikke klar</h1><p>Kjør <code>/sis/?sync=both</code> én gang for å installere nv5-lib, eller last opp filer manuelt.</p>';
+    echo '<h1>Admin er ikke klar</h1><p>Last opp <code>nv5-lib/sync.php</code> manuelt, eller kjør <code>/admin/?sync=env</code> etter bootstrap.</p>';
     exit;
 }
 require $lib;
