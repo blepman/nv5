@@ -308,25 +308,27 @@
     return quayPlatformLabel(name, quayCode, headsign) || name || "";
   }
 
-  function summaryChipLabel(leg) {
-    var code = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
-    var dest = String(leg.lineDestination || "").trim();
-    if (dest) {
-      return code + " " + dest;
-    }
-    return code;
-  }
-
   function renderSummaryChip(leg) {
     if (leg.mode === "foot") {
-      return '<span class="trip-summary-chip trip-summary-chip--walk">Gå</span>';
+      return (
+        '<span class="trip-summary-leg trip-summary-leg--walk">' +
+        '<span class="trip-summary-chip trip-summary-chip--walk">Gå</span>' +
+        "</span>"
+      );
     }
-    var label = summaryChipLabel(leg);
+    var code = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
+    var dest = String(leg.lineDestination || "").trim();
+    var destHtml = dest
+      ? '<span class="trip-summary-chip__dest">' + escapeHtml(dest) + "</span>"
+      : "";
     return (
+      '<span class="trip-summary-leg">' +
       '<span class="trip-summary-chip"' +
       lineStyleAttr(leg) +
       ">" +
-      escapeHtml(label) +
+      escapeHtml(code) +
+      "</span>" +
+      destHtml +
       "</span>"
     );
   }
@@ -483,15 +485,15 @@
           '<span class="trip-pattern__arr">' +
           escapeHtml(formatClock(pattern.endTime)) +
           "</span>" +
+          '<span class="trip-pattern__duration">' +
+          escapeHtml(formatDuration(pattern.duration)) +
+          "</span>" +
           "</span>" +
           '<span class="trip-pattern__overview">' +
           '<span class="trip-pattern__chips">' +
           renderPatternRouteChips(pattern) +
           "</span>" +
           '<span class="trip-pattern__meta-row">' +
-          "<strong>" +
-          escapeHtml(formatDuration(pattern.duration)) +
-          "</strong>" +
           "<span>" +
           escapeHtml(changes) +
           " · " +
