@@ -195,7 +195,39 @@
     return leg.lineDestination;
   }
 
+  function stopAbbrev(name) {
+    var compact = String(name || "").replace(/\s+/g, "").trim();
+    if (!compact) {
+      return "";
+    }
+    return compact.slice(0, 3).toLocaleUpperCase("nb-NO");
+  }
+
+  function quayPlatformLabel(placeName, quayCode) {
+    if (!quayCode) {
+      return "";
+    }
+    var abbr = stopAbbrev(placeName);
+    return abbr ? abbr + quayCode : "Plattform " + quayCode;
+  }
+
   function legRoute(leg) {
+    if (leg.mode === "foot" && leg.fromName && leg.fromName === leg.toName) {
+      if (leg.fromQuay && leg.toQuay) {
+        var fromPlatform = quayPlatformLabel(leg.fromName, leg.fromQuay);
+        var toPlatform = quayPlatformLabel(leg.toName, leg.toQuay);
+        if (fromPlatform && toPlatform && fromPlatform !== toPlatform) {
+          return fromPlatform + " – " + toPlatform;
+        }
+      }
+      if (
+        leg.fromQuayDescription &&
+        leg.toQuayDescription &&
+        leg.fromQuayDescription !== leg.toQuayDescription
+      ) {
+        return leg.fromQuayDescription + " → " + leg.toQuayDescription;
+      }
+    }
     return leg.fromName + " → " + leg.toName;
   }
 

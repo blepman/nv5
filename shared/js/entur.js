@@ -704,6 +704,12 @@
       mode: leg.mode || "",
       fromName: (leg.fromPlace && leg.fromPlace.name) || "",
       toName: (leg.toPlace && leg.toPlace.name) || "",
+      fromQuay: (leg.fromPlace && leg.fromPlace.quay && leg.fromPlace.quay.publicCode) || "",
+      toQuay: (leg.toPlace && leg.toPlace.quay && leg.toPlace.quay.publicCode) || "",
+      fromQuayDescription:
+        (leg.fromPlace && leg.fromPlace.quay && leg.fromPlace.quay.description) || "",
+      toQuayDescription:
+        (leg.toPlace && leg.toPlace.quay && leg.toPlace.quay.description) || "",
       lineCode: line.publicCode || "",
       lineName: line.name || "",
       lineDestination:
@@ -761,8 +767,8 @@
     mode
     distance
     duration
-    fromPlace { name }
-    toPlace { name }
+    fromPlace { name quay { publicCode description } }
+    toPlace { name quay { publicCode description } }
     fromEstimatedCall {
       destinationDisplay { frontText }
     }
