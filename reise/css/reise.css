@@ -294,7 +294,7 @@
   width: 100%;
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: start;
+  align-items: stretch;
   gap: 0.65rem 0.75rem;
   padding: 0.85rem 0.9rem;
   border: none;
@@ -358,8 +358,44 @@
 .trip-card__main {
   display: flex;
   flex-direction: column;
-  gap: 0.45rem;
+  justify-content: space-between;
+  gap: 0.5rem;
   min-width: 0;
+  min-height: 100%;
+}
+
+.trip-card__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
+  align-items: flex-end;
+}
+
+.trip-meta-pill {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.76rem;
+  font-weight: 600;
+  line-height: 1.2;
+  color: var(--muted);
+  background: color-mix(in srgb, var(--bg) 50%, transparent);
+  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
+}
+
+.trip-card__chevron {
+  flex-shrink: 0;
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--muted);
+  align-self: center;
+  transition: transform 0.15s ease, color 0.15s ease;
+}
+
+.trip-card.is-open .trip-card__chevron {
+  transform: rotate(90deg);
+  color: var(--accent);
 }
 
 .trip-card__route-tags {
@@ -415,51 +451,6 @@
   font-size: 0.85rem;
   line-height: 1;
   user-select: none;
-}
-
-.trip-card__meta {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 0.3rem;
-}
-
-.trip-meta-pill {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.18rem 0.48rem;
-  border-radius: 999px;
-  font-size: 0.7rem;
-  font-weight: 600;
-  line-height: 1.2;
-  color: var(--muted);
-  background: color-mix(in srgb, var(--bg) 50%, transparent);
-  border: 1px solid color-mix(in srgb, var(--line) 90%, transparent);
-}
-
-.trip-card__chevron {
-  flex-shrink: 0;
-  width: 1.35rem;
-  height: 1.35rem;
-  margin-top: 0.15rem;
-  align-self: center;
-  position: relative;
-  opacity: 0.55;
-  transition: transform 0.18s ease, opacity 0.15s ease;
-}
-
-.trip-card__chevron::before {
-  content: "";
-  position: absolute;
-  inset: 0.2rem 0.45rem;
-  border-right: 2px solid currentColor;
-  border-bottom: 2px solid currentColor;
-  transform: rotate(-45deg);
-}
-
-.trip-card.is-open .trip-card__chevron {
-  transform: rotate(90deg);
-  opacity: 1;
-  color: var(--accent);
 }
 
 /* —— Timeline (inspirert av travel leg, egen NV5-tolkning) —— */
