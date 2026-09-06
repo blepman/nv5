@@ -12,7 +12,7 @@ declare(strict_types=1);
  */
 
 const NV5_INITIAL_OWNER = 'blepman';
-const NV5_INITIAL_REPO = 'nv5-sis';
+const NV5_INITIAL_REPO = 'nv5';
 const NV5_INITIAL_SERVER_BRANCH = 'server';
 const NV5_INITIAL_UA = 'nv5-initial-bootstrap';
 const NV5_INITIAL_RAW_BASE = 'https://raw.githubusercontent.com/'

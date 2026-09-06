@@ -1,15 +1,19 @@
-# nv5-sis — server (env-nv5)
+# nv5 — server (env-nv5)
 
 PHP-sync for **admin**, **sis**, **reise** og **shared** på `nv5.haatetepe.no`.
 
+GitHub-repo: `blepman/nv5` (privat). Sync og oppsett krever `NV5_GITHUB_TOKEN` i `env/env-nv5/config.php`.
+
 ## Engangs-oppsett (anbefalt)
 
-1. Last opp **`nv5-init.php`** fra denne branchen til **site root** (`www/nv5/` — mappen kan være tom).
-2. Åpne **`https://nv5.haatetepe.no/nv5-init.php`**
-3. Fyll inn **admin-bruker** og **passord** — scriptet henter server-skjelett + innhold fra GitHub og oppretter `env/env-nv5/`.
-4. Ved suksess **sletter `nv5-init.php` seg selv** fra serveren. Hvis `unlink` feiler (f.eks. filrettigheter), fjern fila manuelt.
+1. **Omdøp repo** til `nv5` og sett det **privat** på GitHub (Settings → General).
+2. Opprett en **GitHub PAT** med read på repoet.
+3. Last opp **`nv5-init.php`** fra `server`-branchen til **site root** (`www/nv5/` — mappen kan være tom).
+4. Åpne **`https://nv5.haatetepe.no/nv5-init.php`**
+5. Fyll inn **GitHub-token**, **admin-bruker** og **passord** — scriptet henter kode og oppretter `env/env-nv5/`.
+6. Ved suksess **sletter `nv5-init.php` seg selv** fra serveren.
 
-Raw: https://raw.githubusercontent.com/blepman/nv5-sis/server/nv5-init.php
+`nv5-init.php` ligger i repoet under `server`-branchen — last ned fra GitHub (ikke raw-URL; repoet er privat).
 
 **Eldre alternativ:** `index-initial.php` (uten passordskjema — må slettes manuelt etter bruk).
 
