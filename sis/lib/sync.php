@@ -41,13 +41,13 @@ function nv5_run(string $appId, string $appRoot): void
         $boardCheckInterval = nv5_normalize_board_interval((int) $_COOKIE['nv5_github_interval']);
     }
 
-    $gate = nv5_gate_forced_sync($siteRoot, $stateDir, $sync, $syncKey);
+    $paths = nv5_paths($siteRoot, $stateDir);
+    $gate = nv5_gate_forced_sync($siteRoot, $stateDir, $sync, $syncKey, $paths);
     $sync = $gate['sync'];
     if ($gate['retry_after'] > 0) {
         header('Retry-After: ' . (string) $gate['retry_after']);
     }
 
-    $paths = nv5_paths($siteRoot, $stateDir);
     $adminSyncError = null;
 
     try {
@@ -58,13 +58,23 @@ function nv5_run(string $appId, string $appRoot): void
                 $adminSyncError = $e->getMessage();
                 nv5_log_sync_event($stateDir, 'admin_sync_error ' . $adminSyncError);
             }
-            nv5_render_admin($paths, [
-                'site_root' => $siteRoot,
-                'state_dir' => $stateDir,
-                'sync' => $sync,
-                'retry_after' => $gate['retry_after'],
-                'sync_error' => $adminSyncError,
-            ]);
+            try {
+                nv5_render_admin($paths, [
+                    'site_root' => $siteRoot,
+                    'state_dir' => $stateDir,
+                    'sync' => $sync,
+                    'retry_after' => $gate['retry_after'],
+                    'sync_error' => $adminSyncError,
+                ]);
+            } catch (Throwable $e) {
+                nv5_render_admin_not_ready($paths, [
+                    'site_root' => $siteRoot,
+                    'state_dir' => $stateDir,
+                    'sync' => $sync,
+                    'retry_after' => $gate['retry_after'],
+                    'sync_error' => $adminSyncError ?? $e->getMessage(),
+                ]);
+            }
             return;
         }
 
@@ -76,16 +86,7 @@ function nv5_run(string $appId, string $appRoot): void
             nv5_render_app($appId, $paths);
             return;
         }
-        http_response_code(503);
-        nv5_send_security_headers();
-        header('Content-Type: text/html; charset=utf-8');
-        $title = match ($appId) {
-            'reise' => 'Reise',
-            'admin' => 'NV5 Admin',
-            default => 'SIS',
-        };
-        echo '<!DOCTYPE html><html lang="nb"><meta charset="utf-8"><title>' . $title . '</title>';
-        echo '<h1>Appen er ikke klar</h1><p>' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
+        nv5_render_app_not_ready($appId, $e->getMessage(), $sync, $gate['retry_after']);
     }
 }
 
@@ -94,34 +95,39 @@ function nv5_run(string $appId, string $appRoot): void
  */
 function nv5_run_sync_jobs(string $appId, array $paths, array $sync, int $boardCheckInterval): void
 {
-    if ($sync['server']) {
-        nv5_maybe_sync_server($paths, true);
-    } elseif (nv5_should_sync_server($paths)) {
-        nv5_maybe_sync_server($paths, false);
-    }
+    nv5_begin_main_extract_batch();
+    try {
+        if ($sync['server']) {
+            nv5_maybe_sync_server($paths, true);
+        } elseif (nv5_should_sync_server($paths)) {
+            nv5_maybe_sync_server($paths, false);
+        }
 
-    if ($sync['shared']) {
-        nv5_maybe_sync_shared($paths, true);
-    } elseif (nv5_should_sync_shared($paths)) {
-        nv5_maybe_sync_shared($paths, false);
-    }
+        if ($sync['shared']) {
+            nv5_maybe_sync_shared($paths, true);
+        } elseif (nv5_should_sync_shared($paths)) {
+            nv5_maybe_sync_shared($paths, false);
+        }
 
-    if ($sync['admin']) {
-        nv5_maybe_sync_admin($paths, true);
-    } elseif ($appId === 'admin' && nv5_should_sync_admin($paths)) {
-        nv5_maybe_sync_admin($paths, false);
-    }
+        if ($sync['admin']) {
+            nv5_maybe_sync_admin($paths, true);
+        } elseif ($appId === 'admin' && nv5_should_sync_admin($paths)) {
+            nv5_maybe_sync_admin($paths, false);
+        }
 
-    if ($sync['sis']) {
-        nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, true);
-    } elseif ($appId === 'sis' && nv5_should_sync_app('sis', $paths, $boardCheckInterval)) {
-        nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, false);
-    }
+        if ($sync['sis']) {
+            nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, true);
+        } elseif ($appId === 'sis' && nv5_should_sync_app('sis', $paths, $boardCheckInterval)) {
+            nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, false);
+        }
 
-    if ($sync['reise']) {
-        nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, true);
-    } elseif ($appId === 'reise' && nv5_should_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL)) {
-        nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, false);
+        if ($sync['reise']) {
+            nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, true);
+        } elseif ($appId === 'reise' && nv5_should_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL)) {
+            nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, false);
+        }
+    } finally {
+        nv5_end_main_extract_batch();
     }
 }
 
@@ -171,7 +177,7 @@ function nv5_parse_sync(string $appId): array
  * @param array{param:string,server:bool,shared:bool,admin:bool,sis:bool,reise:bool,all:bool} $sync
  * @return array{sync:array<string,bool>,retry_after:int}
  */
-function nv5_gate_forced_sync(string $siteRoot, string $stateDir, array $sync, string $providedKey): array
+function nv5_gate_forced_sync(string $siteRoot, string $stateDir, array $sync, string $providedKey, ?array $paths = null): array
 {
     $retryAfter = 0;
     $out = $sync;
@@ -188,6 +194,10 @@ function nv5_gate_forced_sync(string $siteRoot, string $stateDir, array $sync, s
 
     foreach ($kinds as $kind => $cfg) {
         if (!$cfg['flag']) {
+            continue;
+        }
+        if ($paths !== null && nv5_sync_recovery_needed($kind, $paths)) {
+            nv5_log_sync_event($stateDir, "allow kind={$kind} reason=recovery");
             continue;
         }
         if ($cfg['secret']) {
@@ -213,6 +223,26 @@ function nv5_gate_forced_sync(string $siteRoot, string $stateDir, array $sync, s
     }
 
     return ['sync' => $out, 'retry_after' => $retryAfter];
+}
+
+function nv5_sync_recovery_needed(string $kind, array $paths): bool
+{
+    if ($kind === 'sis') {
+        return !nv5_app_content_valid('sis', $paths['apps']['sis']['content']);
+    }
+    if ($kind === 'reise') {
+        return !nv5_app_content_valid('reise', $paths['apps']['reise']['content']);
+    }
+    if ($kind === 'admin') {
+        return !is_file($paths['admin_content'] . '/index.html');
+    }
+    if ($kind === 'shared') {
+        return !is_file($paths['shared'] . '/js/util.js');
+    }
+    if ($kind === 'server') {
+        return !nv5_server_webroot_complete($paths['site_root']);
+    }
+    return false;
 }
 
 function nv5_paths(string $siteRoot, string $stateDir): array
@@ -609,6 +639,22 @@ function nv5_write_env_config_file(string $path, array $values): void
 /**
  * @param array<string, string> $values
  */
+function nv5_write_host_env_config(string $siteRoot, array $values): void
+{
+    nv5_migrate_host_env_from_webroot($siteRoot);
+    $dir = nv5_host_env_dir($siteRoot);
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('Kunne ikke lage ' . $dir);
+    }
+    @chmod($dir, 0755);
+    $path = $dir . '/config.php';
+    $existing = is_file($path) ? nv5_load_env_config_file($path) : [];
+    nv5_write_env_config_file($path, array_merge($existing, $values));
+}
+
+/**
+ * @param array<string, string> $values
+ */
 function nv5_write_app_env_config(string $siteRoot, string $appId, array $values): void
 {
     $dir = nv5_app_env_dir($siteRoot, $appId);
@@ -624,13 +670,38 @@ function nv5_admin_env_configured(string $siteRoot): bool
     if (trim((string) (getenv('NV5_ADMIN_PASSWORD') ?: '')) !== '') {
         return true;
     }
+    $rootPass = nv5_load_env_config_file(nv5_host_env_dir($siteRoot) . '/config.php')['NV5_ADMIN_PASSWORD'] ?? '';
+    if ($rootPass !== '') {
+        return true;
+    }
     $pass = nv5_host_env_merged_config($siteRoot, 'admin')['NV5_ADMIN_PASSWORD'] ?? '';
     return $pass !== '';
+}
+
+function nv5_migrate_admin_env_to_root(string $siteRoot): void
+{
+    $rootPath = nv5_host_env_dir($siteRoot) . '/config.php';
+    $rootLoaded = nv5_load_env_config_file($rootPath);
+    if (($rootLoaded['NV5_ADMIN_PASSWORD'] ?? '') !== '') {
+        return;
+    }
+    $adminPath = nv5_app_env_dir($siteRoot, 'admin') . '/config.php';
+    $adminLoaded = nv5_load_env_config_file($adminPath);
+    if (($adminLoaded['NV5_ADMIN_PASSWORD'] ?? '') === '') {
+        return;
+    }
+    $values = [];
+    if (($adminLoaded['NV5_ADMIN_USER'] ?? '') !== '') {
+        $values['NV5_ADMIN_USER'] = $adminLoaded['NV5_ADMIN_USER'];
+    }
+    $values['NV5_ADMIN_PASSWORD'] = $adminLoaded['NV5_ADMIN_PASSWORD'];
+    nv5_write_host_env_config($siteRoot, $values);
 }
 
 function nv5_ensure_host_config(string $siteRoot): void
 {
     nv5_migrate_host_env_from_webroot($siteRoot);
+    nv5_migrate_admin_env_to_root($siteRoot);
 
     if (!nv5_host_env_parent_accessible($siteRoot) && trim((string) (getenv('NV5_ENV_DIR') ?: '')) === '') {
         return;
@@ -651,6 +722,8 @@ function nv5_ensure_host_config(string $siteRoot): void
 declare(strict_types=1);
 
 return [
+    // 'NV5_ADMIN_USER' => 'admin',
+    // 'NV5_ADMIN_PASSWORD' => '…',
     // 'NV5_GITHUB_TOKEN' => 'ghp_…',
     // 'NV5_SYNC_SERVER_KEY' => 'valgfri-nøkkel-for-?sync=server',
 ];
@@ -660,13 +733,6 @@ PHP;
             nv5_write_atomic($path, $template);
             @chmod($path, 0644);
         } catch (Throwable $e) {
-        }
-    }
-
-    foreach (['admin', 'sis', 'reise'] as $appId) {
-        $appDir = nv5_app_env_dir($siteRoot, $appId);
-        if (!is_dir($appDir)) {
-            @mkdir($appDir, 0755, true);
         }
     }
 }
@@ -716,20 +782,20 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         ];
     }
 
-    $configPass = nv5_host_env_merged_config($siteRoot, 'admin')['NV5_ADMIN_PASSWORD'] ?? '';
-    if ($configPass !== '') {
+    $rootPass = nv5_load_env_config_file(nv5_host_env_dir($siteRoot) . '/config.php')['NV5_ADMIN_PASSWORD'] ?? '';
+    if ($rootPass !== '') {
         return [
             'active' => true,
-            'source' => 'env/env-nv5/admin/config.php',
+            'source' => 'env/env-nv5/config.php',
             'hint' => '',
         ];
     }
 
-    $legacyRootPass = nv5_load_env_config_file(nv5_host_env_dir($siteRoot) . '/config.php')['NV5_ADMIN_PASSWORD'] ?? '';
-    if ($legacyRootPass !== '') {
+    $adminPass = nv5_load_env_config_file(nv5_app_env_dir($siteRoot, 'admin') . '/config.php')['NV5_ADMIN_PASSWORD'] ?? '';
+    if ($adminPass !== '') {
         return [
             'active' => true,
-            'source' => 'env/env-nv5/config.php (flytt til admin/config.php)',
+            'source' => 'env/env-nv5/admin/config.php',
             'hint' => '',
         ];
     }
@@ -739,7 +805,7 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         return [
             'active' => false,
             'source' => '',
-            'hint' => 'admin/config.php finnes — sett NV5_ADMIN_PASSWORD.',
+            'hint' => 'admin/config.php finnes — sett NV5_ADMIN_PASSWORD, eller flytt til env/env-nv5/config.php.',
         ];
     }
 
@@ -748,7 +814,7 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         return [
             'active' => false,
             'source' => '',
-            'hint' => 'Kjør nv5-init.php for å sette admin-bruker og passord, eller opprett env/env-nv5/admin/config.php.',
+            'hint' => 'Kjør nv5-init.php for å sette admin-bruker og passord, eller legg NV5_ADMIN_PASSWORD i env/env-nv5/config.php.',
         ];
     }
 
@@ -1387,8 +1453,26 @@ function nv5_sync_server_branch(string $siteRoot, string $shaFile, bool $force =
     }
 }
 
+function nv5_begin_main_extract_batch(): void
+{
+    $GLOBALS['nv5_main_extract_batch'] = true;
+}
+
+function nv5_end_main_extract_batch(): void
+{
+    if (isset($GLOBALS['nv5_main_extract_root']) && is_string($GLOBALS['nv5_main_extract_root'])) {
+        nv5_finish_main_extract($GLOBALS['nv5_main_extract_root']);
+        unset($GLOBALS['nv5_main_extract_root']);
+    }
+    unset($GLOBALS['nv5_main_extract_batch']);
+}
+
 function nv5_fetch_main_source(): string
 {
+    if (isset($GLOBALS['nv5_main_extract_root']) && is_dir($GLOBALS['nv5_main_extract_root'])) {
+        return $GLOBALS['nv5_main_extract_root'];
+    }
+
     $o = rawurlencode(NV5_OWNER);
     $r = rawurlencode(NV5_REPO);
     $b = rawurlencode(NV5_BOARD_BRANCH);
@@ -1405,10 +1489,23 @@ function nv5_fetch_main_source(): string
         if (count($entries) !== 1) {
             throw new RuntimeException('Uventet main-zip-struktur');
         }
-        return $extract . '/' . $entries[0];
+        $root = $extract . '/' . $entries[0];
+        $GLOBALS['nv5_main_extract_root'] = $root;
+        return $root;
     } finally {
         @unlink($zipPath);
     }
+}
+
+function nv5_release_main_extract(string $extractRoot): void
+{
+    if (!empty($GLOBALS['nv5_main_extract_batch'])) {
+        return;
+    }
+    if (isset($GLOBALS['nv5_main_extract_root']) && $GLOBALS['nv5_main_extract_root'] === $extractRoot) {
+        unset($GLOBALS['nv5_main_extract_root']);
+    }
+    nv5_finish_main_extract($extractRoot);
 }
 
 function nv5_finish_main_extract(string $extractRoot): void
@@ -1481,7 +1578,7 @@ function nv5_sync_app_from_github(
         nv5_rm_tree($old);
         file_put_contents($shaFile, $remote . "\n");
     } finally {
-        nv5_finish_main_extract($extract);
+        nv5_release_main_extract($extract);
         nv5_rm_tree($tmp);
     }
 }
@@ -1517,7 +1614,7 @@ function nv5_sync_tree_from_github(
         nv5_rm_tree($old);
         file_put_contents($shaFile, $remote . "\n");
     } finally {
-        nv5_finish_main_extract($extract);
+        nv5_release_main_extract($extract);
         nv5_rm_tree($tmp);
     }
 }
@@ -1566,7 +1663,7 @@ function nv5_sync_admin_from_github(array $paths, bool $force): void
         nv5_rm_tree($old);
         file_put_contents($paths['admin_sha'], $remote . "\n");
     } finally {
-        nv5_finish_main_extract($extract);
+        nv5_release_main_extract($extract);
         nv5_rm_tree($paths['admin_content_tmp']);
     }
 }
@@ -1649,6 +1746,68 @@ function nv5_bust_asset_urls(string $html, string $version): string
     return is_string($out) ? $out : $html;
 }
 
+function nv5_render_app_not_ready(string $appId, string $message, array $sync, int $retryAfter): void
+{
+    http_response_code(503);
+    nv5_send_security_headers();
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store');
+    $title = match ($appId) {
+        'reise' => 'Reise',
+        default => 'SIS',
+    };
+    $syncUrl = '/' . $appId . '/?sync=1';
+    $adminUrl = '/admin/?sync=all';
+    $hints = [];
+    if ($retryAfter > 0) {
+        $hints[] = 'Sync ble hoppet over pga. rate limit — prøv igjen om ' . (int) $retryAfter . ' sekunder.';
+    }
+    if (str_contains($message, '403') || str_contains($message, 'rate limit')) {
+        $hints[] = 'Legg <code>NV5_GITHUB_TOKEN</code> i <code>env/env-nv5/config.php</code> for å unngå GitHub rate limit.';
+    }
+    if (str_contains($message, 'ext-zip')) {
+        $hints[] = 'Be hostingleverandøren om å aktivere PHP <code>ext-zip</code>.';
+    }
+    $hintHtml = $hints === []
+        ? ''
+        : '<ul><li>' . implode('</li><li>', $hints) . '</li></ul>';
+    echo '<!DOCTYPE html><html lang="nb"><head><meta charset="utf-8"><title>' . htmlspecialchars($title, ENT_QUOTES, 'UTF-8') . '</title>';
+    echo '<style>body{font-family:system-ui,sans-serif;background:#0b1220;color:#e8edf7;max-width:36rem;margin:2rem auto;padding:0 1rem;line-height:1.5}a{color:#6eb5ff}code{background:#121a2b;padding:.1em .35em;border-radius:.25rem}</style>';
+    echo '</head><body>';
+    echo '<h1>Appen er ikke klar</h1>';
+    echo '<p>' . htmlspecialchars($message, ENT_QUOTES, 'UTF-8') . '</p>';
+    echo $hintHtml;
+    echo '<p>Prøv <a href="' . htmlspecialchars($syncUrl, ENT_QUOTES, 'UTF-8') . '">' . htmlspecialchars($syncUrl, ENT_QUOTES, 'UTF-8') . '</a> '
+        . 'eller logg inn på <a href="' . htmlspecialchars($adminUrl, ENT_QUOTES, 'UTF-8') . '">admin</a> og kjør <code>?sync=all</code>.</p>';
+    echo '</body></html>';
+}
+
+function nv5_render_admin_not_ready(array $paths, array $context = []): void
+{
+    http_response_code(503);
+    nv5_send_security_headers();
+    header('Content-Type: text/html; charset=utf-8');
+    header('Cache-Control: no-store');
+    $sync = is_array($context['sync'] ?? null)
+        ? $context['sync']
+        : ['param' => '', 'server' => false, 'shared' => false, 'admin' => false, 'sis' => false, 'reise' => false, 'all' => false];
+    $notice = nv5_build_admin_notice(
+        (string) ($context['site_root'] ?? $paths['site_root']),
+        (string) ($context['state_dir'] ?? ''),
+        $sync,
+        (int) ($context['retry_after'] ?? 0),
+        isset($context['sync_error']) ? (string) $context['sync_error'] : null
+    );
+    echo '<!DOCTYPE html><html lang="nb"><head><meta charset="utf-8"><title>NV5 Admin</title>';
+    echo '<style>body{font-family:system-ui,sans-serif;background:#0b1220;color:#e8edf7;max-width:36rem;margin:2rem auto;padding:0 1rem;line-height:1.5}a{color:#6eb5ff}code{background:#121a2b;padding:.1em .35em;border-radius:.25rem}</style>';
+    echo '</head><body>';
+    echo '<h1>Admin er ikke klar</h1>';
+    echo '<p>Admin-UI er ikke synket ennå.</p>';
+    echo $notice;
+    echo '<p>Prøv <a href="/admin/?sync=env">/admin/?sync=env</a> eller <a href="/admin/?sync=all">/admin/?sync=all</a>.</p>';
+    echo '</body></html>';
+}
+
 function nv5_render_app(string $appId, array $paths): void
 {
     $app = $paths['apps'][$appId];
@@ -1723,7 +1882,8 @@ function nv5_render_admin(array $paths, array $context = []): void
             (string) $context['site_root'],
             (string) $context['state_dir'],
             is_array($context['sync'] ?? null) ? $context['sync'] : ['param' => '', 'server' => false, 'shared' => false, 'admin' => false, 'sis' => false, 'reise' => false, 'all' => false],
-            (int) ($context['retry_after'] ?? 0)
+            (int) ($context['retry_after'] ?? 0),
+            isset($context['sync_error']) ? (string) $context['sync_error'] : null
         );
         $replaced = preg_replace('/(<header class="admin__header">.*?<\/header>)/s', '$1' . "\n\n      " . $notice, $html, 1);
         if (is_string($replaced)) {
@@ -1748,25 +1908,30 @@ function nv5_bootstrap_install(string $siteRoot): array
     $paths = nv5_paths($siteRoot, $stateDir);
     $steps = [];
 
-    nv5_maybe_sync_server($paths, true);
-    $steps[] = 'server — PHP, nginx-conf, entry points';
-    file_put_contents($paths['server_check'], (string) time());
+    nv5_begin_main_extract_batch();
+    try {
+        nv5_maybe_sync_server($paths, true);
+        $steps[] = 'server — PHP, nginx-conf, entry points';
+        file_put_contents($paths['server_check'], (string) time());
 
-    nv5_maybe_sync_shared($paths, true);
-    $steps[] = 'shared — /shared/';
-    file_put_contents($paths['shared_check'], (string) time());
+        nv5_maybe_sync_shared($paths, true);
+        $steps[] = 'shared — /shared/';
+        file_put_contents($paths['shared_check'], (string) time());
 
-    nv5_maybe_sync_admin($paths, true);
-    $steps[] = 'admin — drift-UI';
-    file_put_contents($paths['admin_check'], (string) time());
+        nv5_maybe_sync_admin($paths, true);
+        $steps[] = 'admin — drift-UI';
+        file_put_contents($paths['admin_check'], (string) time());
 
-    nv5_maybe_sync_app('sis', $paths, 60, true);
-    $steps[] = 'sis — tavle → /sis/content/';
-    file_put_contents($paths['apps']['sis']['check'], (string) time());
+        nv5_maybe_sync_app('sis', $paths, 60, true);
+        $steps[] = 'sis — tavle → /sis/content/';
+        file_put_contents($paths['apps']['sis']['check'], (string) time());
 
-    nv5_maybe_sync_app('reise', $paths, 60, true);
-    $steps[] = 'reise — planlegger → /reise/content/';
-    file_put_contents($paths['apps']['reise']['check'], (string) time());
+        nv5_maybe_sync_app('reise', $paths, 60, true);
+        $steps[] = 'reise — planlegger → /reise/content/';
+        file_put_contents($paths['apps']['reise']['check'], (string) time());
+    } finally {
+        nv5_end_main_extract_batch();
+    }
 
     return ['steps' => $steps];
 }

@@ -46,11 +46,8 @@ SIS-innstillinger (cookie `nv5_github_interval`) styrer automatisk sjekk av **ku
 │       └── shared/
 └── env/
     └── env-nv5/                 # secrets for nv5-subdomenet
-        ├── config.php           # felles (GitHub-token, sync-nøkkel, …)
-        ├── admin/
-        │   └── config.php       # admin-bruker/passord (opprettes av nv5-init.php)
-        ├── sis/                 # valgfritt per app
-        └── reise/
+        └── config.php           # admin-bruker/passord, GitHub-token, sync-nøkkel, …
+        # valgfritt senere: admin/config.php, sis/config.php (overstyrer rot)
 ```
 
 PHP finner `env/env-nv5` ved å gå opp til `www/` og deretter ett hakk til siden (`../env/env-nv5`). **Ikke** `www/env/…` og **ikke** `www/nv5/env/…`.
@@ -59,13 +56,13 @@ PHP finner `env/env-nv5` ved å gå opp til `www/` og deretter ett hakk til side
 
 Hvis auto-sti feiler: sett **`NV5_ENV_DIR`** til absolutt sti i host-miljøet.
 
-PHP leser i rekkefølge: `getenv()` → `env/env-nv5/config.php` + `env/env-nv5/{app}/config.php` (app overstyrer rot) → enkeltfil i `env/env-nv5/` → state-mappe (fallback).
+PHP leser i rekkefølge: `getenv()` → `env/env-nv5/config.php` (+ valgfri `env/env-nv5/{app}/config.php` som overstyrer) → enkeltfil i `env/env-nv5/` → state-mappe (fallback).
 
 ## State og sikkerhet
 
 - State/lock i system-temp (`sys_get_temp_dir()/nv5-sis-…`)
 - Rot-`.htaccess` slår av mappevisning i site root; `nv5-lib/` er ikke web-tilgjengelig
-- `/admin/` krever HTTP Basic Auth når `NV5_ADMIN_PASSWORD` er satt (`env/env-nv5/admin/config.php`, rot-config eller env)
+- `/admin/` krever HTTP Basic Auth når `NV5_ADMIN_PASSWORD` er satt i `env/env-nv5/config.php` (eller env)
 - Alternativ uten env-mappe: skriv passordet til `admin-password` i state-mappen (utenfor webroot)
 - `?sync=server` kan kreve nøkkel (`NV5_SYNC_SERVER_KEY` i `env/env-nv5/` eller `sync-server-secret` i state)
 - Ved hyppig sync: legg `NV5_GITHUB_TOKEN` i `config.php` (GitHub rate limit uten token)
