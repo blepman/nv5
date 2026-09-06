@@ -2,7 +2,7 @@
 
 Last opp til `nv5.haatetepe.no/sis/` **én gang**.
 
-`index.php` speiler deretter seg selv fra GitHub-branchen `server`, og speiler tavlen fra `main` til `content/`.
+`index.php` speiler deretter seg selv fra GitHub-branchen `server`, og speiler tavlen fra `main` (`sis/` + `shared/`) til `content/`.
 
 ## Engangs-oppsett
 

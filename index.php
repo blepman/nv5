@@ -866,9 +866,17 @@ function sync_board_from_github(
         }
 
         rm_tree($tmp);
-        copy_board_tree($source, $tmp);
+        $sisSource = $source . '/sis';
+        if (!is_dir($sisSource) || !is_file($sisSource . '/index.html')) {
+            throw new RuntimeException('main mangler sis/index.html');
+        }
+        copy_board_tree($sisSource, $tmp);
+        $sharedSource = $source . '/shared';
+        if (is_dir($sharedSource)) {
+            copy_board_tree($sharedSource, $tmp . '/shared');
+        }
         if (!is_file($tmp . '/index.html')) {
-            throw new RuntimeException('main mangler index.html');
+            throw new RuntimeException('main mangler index.html etter sis-sync');
         }
 
         $old = $content . '.old';
