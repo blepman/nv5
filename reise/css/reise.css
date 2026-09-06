@@ -315,12 +315,19 @@
 }
 
 .trip-card__schedule {
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-content: stretch;
+  min-width: 3.5rem;
+  min-height: 3.85rem;
+  flex-shrink: 0;
+}
+
+.trip-card__times {
   display: flex;
   flex-direction: column;
   align-items: flex-start;
   gap: 0.12rem;
-  min-width: 3.5rem;
-  flex-shrink: 0;
 }
 
 .trip-card__dep,
@@ -349,26 +356,28 @@
 }
 
 .trip-card__duration {
-  margin-top: 0.15rem;
-  font-size: 0.74rem;
+  margin-top: 0;
+  font-size: 0.8rem;
   font-weight: 600;
+  line-height: 1.2;
   color: var(--accent);
 }
 
 .trip-card__main {
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
-  gap: 0.5rem;
+  display: grid;
+  grid-template-rows: 1fr auto;
+  align-content: stretch;
+  gap: 0.35rem;
   min-width: 0;
-  min-height: 100%;
+  min-height: 3.85rem;
 }
 
 .trip-card__meta {
   display: flex;
   flex-wrap: wrap;
   gap: 0.35rem;
-  align-items: flex-end;
+  align-items: center;
+  align-self: end;
 }
 
 .trip-meta-pill {
@@ -402,7 +411,8 @@
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: 0.35rem 0.3rem;
+  gap: 0.4rem 0.35rem;
+  align-self: start;
 }
 
 .trip-card__route-tags--compact {
@@ -410,7 +420,7 @@
 }
 
 .trip-card__route-compact {
-  font-size: 1rem;
+  font-size: 1.05rem;
   font-weight: 600;
   line-height: 1.3;
   color: var(--text);
@@ -419,7 +429,7 @@
 .trip-route-tag {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
+  gap: 0.4rem;
   max-width: 100%;
 }
 
@@ -432,7 +442,7 @@
   justify-content: center;
   border-radius: 0.34rem;
   font-weight: 700;
-  font-size: 0.8rem;
+  font-size: 0.94rem;
   line-height: 1;
   letter-spacing: -0.02em;
   background: color-mix(in srgb, var(--bg) 70%, transparent);
@@ -440,7 +450,7 @@
 }
 
 .trip-route-tag__dest {
-  font-size: 0.92rem;
+  font-size: 1rem;
   font-weight: 600;
   line-height: 1.2;
   color: var(--text);
@@ -448,7 +458,7 @@
 
 .trip-route-sep {
   color: color-mix(in srgb, var(--muted) 75%, transparent);
-  font-size: 0.85rem;
+  font-size: 0.92rem;
   line-height: 1;
   user-select: none;
 }
@@ -509,10 +519,10 @@
   justify-content: center;
   border-radius: 0.38rem;
   font-weight: 700;
-  font-size: 0.9rem;
+  font-size: 1.05rem;
   line-height: 1;
   letter-spacing: -0.02em;
-  padding: 0.1rem;
+  padding: 0.08rem;
   overflow: hidden;
   text-align: center;
   background: color-mix(in srgb, var(--bg) 70%, transparent);
@@ -521,14 +531,14 @@
 }
 
 .trip-timeline__marker--walk {
-  font-size: 0.86rem;
+  font-size: 1rem;
   font-weight: 700;
   color: var(--muted);
   background: color-mix(in srgb, var(--bg-lift) 88%, transparent);
 }
 
 .trip-timeline__marker--compact {
-  font-size: 0.64rem;
+  font-size: 0.72rem;
   letter-spacing: -0.04em;
 }
 
