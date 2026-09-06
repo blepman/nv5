@@ -362,12 +362,53 @@ function nv5_host_env_dir(string $siteRoot): string
     return dirname($siteRoot) . '/env/env-nv5';
 }
 
+/**
+ * @return array<string, string>
+ */
+function nv5_host_env_config(string $siteRoot): array
+{
+    static $cache = [];
+    $dir = nv5_host_env_dir($siteRoot);
+    if (array_key_exists($dir, $cache)) {
+        return $cache[$dir];
+    }
+
+    $path = $dir . '/config.php';
+    if (!is_readable($path)) {
+        $cache[$dir] = [];
+        return [];
+    }
+
+    $loaded = require $path;
+    if (!is_array($loaded)) {
+        $cache[$dir] = [];
+        return [];
+    }
+
+    $normalized = [];
+    foreach ($loaded as $key => $value) {
+        if (!is_string($key) || (!is_string($value) && !is_int($value) && !is_float($value))) {
+            continue;
+        }
+        $normalized[$key] = trim((string) $value);
+    }
+
+    $cache[$dir] = $normalized;
+    return $normalized;
+}
+
 function nv5_host_env(string $siteRoot, string $name): string
 {
     $fromEnv = trim((string) (getenv($name) ?: ''));
     if ($fromEnv !== '') {
         return $fromEnv;
     }
+
+    $fromConfig = nv5_host_env_config($siteRoot)[$name] ?? '';
+    if ($fromConfig !== '') {
+        return $fromConfig;
+    }
+
     $file = nv5_host_env_dir($siteRoot) . '/' . $name;
     if (is_readable($file)) {
         return trim((string) file_get_contents($file));
@@ -420,6 +461,15 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         ];
     }
 
+    $configPass = nv5_host_env_config($siteRoot)['NV5_ADMIN_PASSWORD'] ?? '';
+    if ($configPass !== '') {
+        return [
+            'active' => true,
+            'source' => 'env/env-nv5/config.php',
+            'hint' => '',
+        ];
+    }
+
     $envFile = nv5_host_env_dir($siteRoot) . '/NV5_ADMIN_PASSWORD';
     if (is_readable($envFile)) {
         return [
@@ -439,8 +489,8 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
     }
 
     $hint = is_dir(nv5_host_env_dir($siteRoot))
-        ? 'Mappen env/env-nv5 finnes, men NV5_ADMIN_PASSWORD mangler eller er ikke lesbar for PHP.'
-        : 'Fant ikke env/env-nv5 ved siden av www/. Opprett filen NV5_ADMIN_PASSWORD der (én linje med passord).';
+        ? 'Mappen env/env-nv5 finnes, men config.php / NV5_ADMIN_PASSWORD mangler eller er ikke lesbar for PHP.'
+        : 'Fant ikke env/env-nv5 ved siden av www/. Opprett config.php der (se env-nv5.config.example.php i repo).';
 
     return [
         'active' => false,
@@ -576,7 +626,7 @@ function nv5_legacy_webroot_state_map(): array
  */
 function nv5_server_sync_skip_web(): array
 {
-    return ['README.md', '.gitignore', 'index-initial.php'];
+    return ['README.md', '.gitignore', 'index-initial.php', 'env-nv5.config.example.php'];
 }
 
 /**
