@@ -1,6 +1,11 @@
 DirectoryIndex index.php
 Options -Indexes
 
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^content/.* - [F,L]
+</IfModule>
+
 <IfModule mod_headers.c>
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "no-referrer"

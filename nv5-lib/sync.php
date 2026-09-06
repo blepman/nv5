@@ -25,6 +25,10 @@ function nv5_run(string $appId, string $appRoot): void
     $stateDir = nv5_ensure_state_dir($siteRoot);
     nv5_migrate_and_scrub_webroot_state($appRoot, $stateDir);
 
+    if ($appId === 'admin') {
+        nv5_require_admin_auth($stateDir);
+    }
+
     $sync = nv5_parse_sync($appId);
     $syncKey = isset($_GET['key']) ? (string) $_GET['key'] : '';
 
@@ -346,6 +350,68 @@ function nv5_sync_server_secret(string $stateDir): string
         return trim((string) file_get_contents($file));
     }
     return '';
+}
+
+/**
+ * @return array{user:string,pass:string}
+ */
+function nv5_admin_credentials(string $stateDir): array
+{
+    $user = trim((string) (getenv('NV5_ADMIN_USER') ?: 'admin'));
+    if ($user === '') {
+        $user = 'admin';
+    }
+    $pass = trim((string) (getenv('NV5_ADMIN_PASSWORD') ?: ''));
+    if ($pass === '') {
+        $file = $stateDir . '/admin-password';
+        if (is_readable($file)) {
+            $pass = trim((string) file_get_contents($file));
+        }
+    }
+    return ['user' => $user, 'pass' => $pass];
+}
+
+/**
+ * @return array{user:string,pass:string}
+ */
+function nv5_http_basic_credentials(): array
+{
+    $user = (string) ($_SERVER['PHP_AUTH_USER'] ?? '');
+    $pass = (string) ($_SERVER['PHP_AUTH_PW'] ?? '');
+    if ($user === '' && $pass === '') {
+        $auth = (string) ($_SERVER['HTTP_AUTHORIZATION'] ?? $_SERVER['REDIRECT_HTTP_AUTHORIZATION'] ?? '');
+        if (str_starts_with(strtolower($auth), 'basic ')) {
+            $decoded = base64_decode(substr($auth, 6), true);
+            if ($decoded !== false && str_contains($decoded, ':')) {
+                [$user, $pass] = explode(':', $decoded, 2);
+            }
+        }
+    }
+    return ['user' => $user, 'pass' => $pass];
+}
+
+function nv5_require_admin_auth(string $stateDir): void
+{
+    $expected = nv5_admin_credentials($stateDir);
+    if ($expected['pass'] === '') {
+        return;
+    }
+
+    $provided = nv5_http_basic_credentials();
+    $ok = $provided['pass'] !== ''
+        && hash_equals($expected['user'], $provided['user'])
+        && hash_equals($expected['pass'], $provided['pass']);
+    if ($ok) {
+        return;
+    }
+
+    nv5_log_sync_event($stateDir, 'deny admin auth ip=' . nv5_client_ip());
+    header('WWW-Authenticate: Basic realm="NV5 Admin", charset="UTF-8"');
+    http_response_code(401);
+    header('Content-Type: text/plain; charset=utf-8');
+    header('Cache-Control: no-store');
+    echo 'Autentisering kreves';
+    exit;
 }
 
 function nv5_log_sync_event(string $stateDir, string $message): void

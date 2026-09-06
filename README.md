@@ -38,6 +38,8 @@ SIS-innstillinger (cookie `nv5_github_interval`) styrer automatisk sjekk av **ku
 
 - State/lock i system-temp (`sys_get_temp_dir()/nv5-sis-…`)
 - Rot-`.htaccess` slår av mappevisning i site root; `nv5-lib/` er ikke web-tilgjengelig
+- `/admin/` krever HTTP Basic Auth når `NV5_ADMIN_PASSWORD` er satt (brukernavn: `admin`, eller `NV5_ADMIN_USER`)
+- Alternativ uten env: skriv passordet til `admin-password` i state-mappen (utenfor webroot)
 - `?sync=server` kan kreve nøkkel (`NV5_SYNC_SERVER_KEY` eller `sync-server-secret` i state)
 - Rate limit per IP på tvungen sync
 - Audit: `sync-audit.log` i state-mappen
