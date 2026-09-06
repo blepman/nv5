@@ -12,31 +12,66 @@
     />
     <meta name="theme-color" content="#0b1220" />
     <title>NV5 Reise – reiseplanlegger</title>
+    <link rel="manifest" href="manifest.webmanifest" />
     <link rel="stylesheet" href="css/reise.css" />
   </head>
   <body>
     <div class="reise">
       <header class="reise__header">
-        <h1>NV5 Reise</h1>
-        <p class="reise__tagline">Reiseplanlegger — under utvikling</p>
+        <div class="reise__brand">
+          <h1>NV5 Reise</h1>
+          <p class="reise__tagline">Planlegg reise med kollektivtrafikk</p>
+        </div>
+        <a class="reise__nav" href="/sis/">Sanntidstavle</a>
       </header>
 
       <main class="reise__main">
-        <p class="reise__lead">
-          Her kommer planlegging fra A til B med Entur-data. Fase 1 bygges
-          etter mono-repo-strukturen er på plass.
-        </p>
-        <ul class="reise__planned">
-          <li>Søk fra og til holdeplass</li>
-          <li>«Reis nå» med 2–3 forslag</li>
-          <li>Etapper med linjer, tider og situasjoner</li>
-        </ul>
-        <a class="reise__link" href="/sis/">← Tilbake til sanntidstavlen</a>
+        <form class="reise__search" id="tripForm">
+          <div class="reise__field">
+            <label class="reise__label" for="fromSearch">Fra</label>
+            <input
+              type="search"
+              id="fromSearch"
+              placeholder="F.eks. Tveita T"
+              autocomplete="off"
+              enterkeyhint="search"
+            />
+            <ul class="reise__results" id="fromResults" hidden></ul>
+          </div>
+
+          <div class="reise__field">
+            <div class="reise__label-row">
+              <label class="reise__label" for="toSearch">Til</label>
+              <button type="button" class="reise__swap" id="swapStops" title="Bytt fra og til">
+                ⇅ Bytt
+              </button>
+            </div>
+            <input
+              type="search"
+              id="toSearch"
+              placeholder="F.eks. Majorstuen"
+              autocomplete="off"
+              enterkeyhint="search"
+            />
+            <ul class="reise__results" id="toResults" hidden></ul>
+          </div>
+
+          <button type="submit" class="reise__submit">Reis nå</button>
+        </form>
+
+        <p class="reise__status" id="tripStatus" hidden aria-live="polite"></p>
+
+        <div class="reise__patterns" id="tripResults" aria-live="polite"></div>
       </main>
 
       <footer class="reise__footer">
-        <a class="reise__link" href="/sis/">NV5 SIS</a>
+        <a class="reise__link" href="/sis/">← NV5 SIS sanntidstavle</a>
       </footer>
     </div>
+
+    <script src="shared/js/util.js"></script>
+    <script src="config.js" defer></script>
+    <script src="shared/js/entur.js" defer></script>
+    <script src="js/plan.js" defer></script>
   </body>
 </html>

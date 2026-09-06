@@ -689,12 +689,127 @@
     };
   }
 
+  function normalizeTripLeg(leg) {
+    var line = leg.line || {};
+    var presentation = line.presentation || {};
+    var situations = (leg.situations || [])
+      .map(function (s) {
+        var summary = (s.summary || []).find(function (item) {
+          return item.language === "no" || item.language === "nb";
+        });
+        return (summary && summary.value) || (s.summary && s.summary[0] && s.summary[0].value) || "";
+      })
+      .filter(Boolean);
+    return {
+      mode: leg.mode || "",
+      fromName: (leg.fromPlace && leg.fromPlace.name) || "",
+      toName: (leg.toPlace && leg.toPlace.name) || "",
+      lineCode: line.publicCode || "",
+      lineName: line.name || "",
+      transportMode: line.transportMode || leg.mode || "",
+      colour: presentation.colour ? "#" + presentation.colour : "",
+      textColour: presentation.textColour ? "#" + presentation.textColour : "",
+      startTime: parseTime(leg.expectedStartTime || leg.aimedStartTime),
+      endTime: parseTime(leg.expectedEndTime || leg.aimedEndTime),
+      situations: situations,
+    };
+  }
+
+  function countTripChanges(legs) {
+    var transit = (legs || []).filter(function (leg) {
+      return leg.mode && leg.mode !== "foot";
+    });
+    return Math.max(0, transit.length - 1);
+  }
+
+  function normalizeTripPattern(pattern) {
+    var legs = (pattern.legs || []).map(normalizeTripLeg);
+    return {
+      startTime: parseTime(pattern.startTime),
+      endTime: parseTime(pattern.endTime),
+      duration: Number(pattern.duration) || 0,
+      walkDistance: Number(pattern.walkDistance) || 0,
+      changes: countTripChanges(pattern.legs || []),
+      legs: legs,
+    };
+  }
+
+  function tripLocation(place) {
+    if (!place) {
+      throw new Error("Mangler holdeplass");
+    }
+    if (place.id) {
+      return { place: place.id };
+    }
+    if (place.lat != null && place.lon != null) {
+      return {
+        coordinates: {
+          latitude: Number(place.lat),
+          longitude: Number(place.lon),
+        },
+      };
+    }
+    throw new Error("Ugyldig holdeplass");
+  }
+
+  const TRIP_LEG_FIELDS = `
+    mode
+    distance
+    duration
+    fromPlace { name }
+    toPlace { name }
+    line {
+      publicCode
+      name
+      transportMode
+      presentation { colour textColour }
+    }
+    expectedStartTime
+    expectedEndTime
+    aimedStartTime
+    aimedEndTime
+    situations { summary { language value } }
+  `;
+
+  const TRIP_QUERY = `
+    query PlanTrip($from: Location!, $to: Location!, $dateTime: DateTime, $numTripPatterns: Int) {
+      trip(from: $from, to: $to, dateTime: $dateTime, numTripPatterns: $numTripPatterns) {
+        tripPatterns {
+          startTime
+          endTime
+          duration
+          walkDistance
+          legs { ${TRIP_LEG_FIELDS} }
+        }
+      }
+    }
+  `;
+
+  async function planTrip(config, fromPlace, toPlace, dateTime) {
+    var patterns = config.numTripPatterns || 3;
+    var variables = {
+      from: tripLocation(fromPlace),
+      to: tripLocation(toPlace),
+      numTripPatterns: patterns,
+    };
+    if (dateTime instanceof Date && !isNaN(dateTime.getTime())) {
+      variables.dateTime = dateTime.toISOString();
+    }
+    var data = await graphql(config, TRIP_QUERY, variables);
+    var trip = data && data.trip;
+    if (!trip) {
+      return [];
+    }
+    return (trip.tripPatterns || []).map(normalizeTripPattern);
+  }
+
   global.NV5Entur = {
     fetchDepartures: fetchDepartures,
     searchStops: searchStops,
     fetchStopQuays: fetchStopQuays,
     fetchQuayLines: fetchQuayLines,
     fetchPlaceLines: fetchPlaceLines,
+    planTrip: planTrip,
     deriveJourneyProgress: deriveJourneyProgress,
     journeyProgressLabel: journeyProgressLabel,
     journeyProgressKey: journeyProgressKey,
