@@ -125,6 +125,7 @@
     rail: "Tog",
     water: "Båt",
     coach: "Buss",
+    air: "Fly",
   };
 
   // Oslo linjekart — overstyrer Entur for T-bane, trikk og tog. Buss/coach beholdes fra Entur.
