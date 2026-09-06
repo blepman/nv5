@@ -2,20 +2,21 @@
 
 PHP-sync for **admin**, **sis**, **reise** og **shared** på `nv5.haatetepe.no`.
 
-## Engangs-oppsett (ny installasjon)
+## Engangs-oppsett (anbefalt)
 
-1. Last opp til **site root** (mappen som inneholder `sis/`, `reise/`, …):
-   - `nv5-lib/sync.php`
-   - `admin/index.php` + `admin/.htaccess`
-   - `sis/index.php` + `sis/.htaccess` + `sis/lib/sync.php` (bootstrap)
-   - `reise/index.php` + `reise/.htaccess`
-   - `shared/.htaccess`
-2. Åpne `https://nv5.haatetepe.no/admin/?sync=env`
-3. Inkluder `nginx-nv5.conf` i HTTPS-vhost (se filen)
+1. Last opp **`index-initial.php`** fra denne branchen til **site root** (mappen som inneholder `sis/`).
+2. Åpne **`https://nv5.haatetepe.no/index-initial.php?run=1`**
+3. Inkluder `nginx-nv5.conf` i HTTPS-vhost og reload nginx (hvis ikke gjort).
+4. **Slett** `index-initial.php` når alt er grønt.
 
-## Migrering fra gammel én-fil `/sis/index.php`
+Scriptet henter server-skjelett + alt innhold (shared, admin, SIS, Reise) fra GitHub.
 
-Etter første `/admin/?sync=env` installeres `nv5-lib/` og nye entry points i site root.
+Raw: https://raw.githubusercontent.com/blepman/nv5-sis/server/index-initial.php
+
+## Manuelt oppsett (alternativ)
+
+1. Last opp til site root: `nv5-lib/sync.php`, `admin/`, `sis/`, `reise/`, `shared/.htaccess`
+2. Åpne `https://nv5.haatetepe.no/admin/?sync=env` og deretter `?sync=all`
 
 ## Sync-URLer
 
@@ -39,6 +40,7 @@ SIS-innstillinger (cookie `nv5_github_interval`) styrer automatisk sjekk av **ku
 - `?sync=server` kan kreve nøkkel (`NV5_SYNC_SERVER_KEY` eller `sync-server-secret` i state)
 - Rate limit per IP på tvungen sync
 - Audit: `sync-audit.log` i state-mappen
+- `index-initial.php` speiles **ikke** til webroot ved vanlig server-sync — slett etter bruk
 
 Trenger PHP med **curl** (eller `allow_url_fopen`) og **zip**.
 

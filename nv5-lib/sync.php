@@ -377,7 +377,7 @@ function nv5_legacy_webroot_state_map(): array
  */
 function nv5_server_sync_skip_web(): array
 {
-    return ['README.md', '.gitignore'];
+    return ['README.md', '.gitignore', 'index-initial.php'];
 }
 
 /**
@@ -1132,4 +1132,38 @@ function nv5_render_admin(array $paths): void
     header('Content-Type: text/html; charset=utf-8');
     header('Cache-Control: no-store');
     echo $html;
+}
+
+/**
+ * Full forced sync for index-initial.php (ingen rate limit).
+ *
+ * @return array{steps:list<string>}
+ */
+function nv5_bootstrap_install(string $siteRoot): array
+{
+    $stateDir = nv5_ensure_state_dir($siteRoot);
+    $paths = nv5_paths($siteRoot, $stateDir);
+    $steps = [];
+
+    nv5_maybe_sync_server($paths, true);
+    $steps[] = 'server — PHP, nginx-conf, entry points';
+    file_put_contents($paths['server_check'], (string) time());
+
+    nv5_maybe_sync_shared($paths, true);
+    $steps[] = 'shared — /shared/';
+    file_put_contents($paths['shared_check'], (string) time());
+
+    nv5_maybe_sync_admin($paths, true);
+    $steps[] = 'admin — drift-UI';
+    file_put_contents($paths['admin_check'], (string) time());
+
+    nv5_maybe_sync_app('sis', $paths, 60, true);
+    $steps[] = 'sis — tavle → /sis/content/';
+    file_put_contents($paths['apps']['sis']['check'], (string) time());
+
+    nv5_maybe_sync_app('reise', $paths, 60, true);
+    $steps[] = 'reise — planlegger → /reise/content/';
+    file_put_contents($paths['apps']['reise']['check'], (string) time());
+
+    return ['steps' => $steps];
 }
