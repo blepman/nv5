@@ -57,7 +57,19 @@
             <ul class="reise__results" id="toResults" hidden></ul>
           </div>
 
-          <button type="submit" class="reise__submit">Reis nå</button>
+          <div class="reise__field">
+            <span class="reise__label">Avreise</span>
+            <div class="reise__when" role="group" aria-label="Avreisetidspunkt">
+              <button type="button" class="reise__when-btn is-active" data-when="now">Nå</button>
+              <button type="button" class="reise__when-btn" data-when="depart">Velg tid</button>
+            </div>
+            <div class="reise__datetime" id="tripDateTimeWrap" hidden>
+              <input type="date" id="tripDate" aria-label="Dato" />
+              <input type="time" id="tripTime" aria-label="Tidspunkt" />
+            </div>
+          </div>
+
+          <button type="submit" class="reise__submit" id="tripSubmit">Søk reise</button>
         </form>
 
         <p class="reise__status" id="tripStatus" hidden aria-live="polite"></p>
