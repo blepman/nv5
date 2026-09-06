@@ -26,7 +26,9 @@ $force = isset($_GET['force']) && $_GET['force'] === '1';
 function nv5_initial_server_files(): array
 {
     return [
+        '.htaccess',
         'nv5-lib/sync.php',
+        'nv5-lib/.htaccess',
         'admin/index.php',
         'admin/.htaccess',
         'sis/index.php',
