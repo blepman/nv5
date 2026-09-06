@@ -424,15 +424,15 @@
 }
 
 .trip-route-tag__badge {
-  flex: 0 0 2rem;
-  width: 2rem;
-  height: 2rem;
+  flex: 0 0 1.65rem;
+  width: 1.65rem;
+  height: 1.65rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.38rem;
+  border-radius: 0.34rem;
   font-weight: 700;
-  font-size: 0.82rem;
+  font-size: 0.8rem;
   line-height: 1;
   letter-spacing: -0.02em;
   background: color-mix(in srgb, var(--bg) 70%, transparent);
@@ -473,9 +473,9 @@
 .trip-timeline::before {
   content: "";
   position: absolute;
-  left: calc(3.35rem / 2 - 1px);
-  top: 1.7rem;
-  bottom: 1.7rem;
+  left: calc(2.5rem / 2 - 1px);
+  top: 1.3rem;
+  bottom: 1.3rem;
   width: 2px;
   background: color-mix(in srgb, var(--muted) 38%, transparent);
   border-radius: 1px;
@@ -484,8 +484,8 @@
 
 .trip-timeline__item {
   display: grid;
-  grid-template-columns: 3.35rem minmax(0, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.65rem;
   padding-bottom: 0.15rem;
   position: relative;
   z-index: 1;
@@ -500,43 +500,42 @@
 }
 
 .trip-timeline__marker {
-  flex: 0 0 3.35rem;
-  width: 3.35rem;
-  height: 3.35rem;
+  flex: 0 0 2.5rem;
+  width: 2.5rem;
+  height: 2.5rem;
   box-sizing: border-box;
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  border-radius: 0.48rem;
+  border-radius: 0.38rem;
   font-weight: 700;
-  font-size: 0.98rem;
-  line-height: 1.05;
+  font-size: 0.9rem;
+  line-height: 1;
   letter-spacing: -0.02em;
-  padding: 0.14rem;
+  padding: 0.1rem;
   overflow: hidden;
   text-align: center;
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   border: 1px solid var(--line);
   z-index: 1;
-  box-shadow: 0 0 0 2px color-mix(in srgb, var(--bg) 55%, transparent);
 }
 
 .trip-timeline__marker--walk {
-  font-size: 0.92rem;
+  font-size: 0.86rem;
   font-weight: 700;
   color: var(--muted);
   background: color-mix(in srgb, var(--bg-lift) 88%, transparent);
 }
 
 .trip-timeline__marker--compact {
-  font-size: 0.76rem;
-  letter-spacing: -0.03em;
+  font-size: 0.64rem;
+  letter-spacing: -0.04em;
 }
 
 .trip-timeline__gap {
   display: grid;
-  grid-template-columns: 3.35rem minmax(0, 1fr);
-  gap: 0.75rem;
+  grid-template-columns: 2.5rem minmax(0, 1fr);
+  gap: 0.65rem;
   padding: 0.1rem 0 0.3rem;
   list-style: none;
   position: relative;

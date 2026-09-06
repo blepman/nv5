@@ -5,7 +5,7 @@ window.NV5_REISE = {
   fetchTimeoutMs: 15000,
   numTripPatterns: 3,
   storageKey: "nv5-reise-settings",
-  appVersion: "2026-09-07e",
+  appVersion: "2026-09-07f",
   defaultFrom: {
     id: "NSR:StopPlace:59517",
     name: "Tveita T",
