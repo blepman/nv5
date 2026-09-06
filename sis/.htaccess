@@ -1,9 +1,8 @@
 DirectoryIndex index.php
 Options -Indexes
 
-# Skjul driftsmetadata, låser og README i webroot
 <IfModule mod_authz_core.c>
-  <FilesMatch "(?i)^(README\.md|nginx-sis-pwa\.conf|\.last-sha|\.last-check|\.server-sha|\.server-check|\.sync\.lock|\.server\.lock)$">
+  <FilesMatch "(?i)^(README\.md|nginx-nv5\.conf|nginx-sis-pwa\.conf)$">
     Require all denied
   </FilesMatch>
   <FilesMatch "^\.">
@@ -11,7 +10,7 @@ Options -Indexes
   </FilesMatch>
 </IfModule>
 <IfModule !mod_authz_core.c>
-  <FilesMatch "(?i)^(README\.md|nginx-sis-pwa\.conf|\.last-sha|\.last-check|\.server-sha|\.server-check|\.sync\.lock|\.server\.lock)$">
+  <FilesMatch "(?i)^(README\.md|nginx-nv5\.conf|nginx-sis-pwa\.conf)$">
     Order allow,deny
     Deny from all
   </FilesMatch>
@@ -21,8 +20,6 @@ Options -Indexes
   </FilesMatch>
 </IfModule>
 
-# Ikke kjør PHP under content/ (tavlefiler skal være statiske)
-# Katalogtreff på content/ skal ikke brukes som app-URL (PWA start_url er /sis/)
 <IfModule mod_rewrite.c>
   RewriteEngine On
   RewriteRule ^content/index\.html$ /sis/ [R=302,L]
@@ -31,22 +28,16 @@ Options -Indexes
 </IfModule>
 
 <IfModule mod_headers.c>
-  # Sikkerhetshoder for statiske filer under /sis/ (inkl. content/)
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "no-referrer"
   Header set X-Frame-Options "DENY"
   Header set Permissions-Policy "accelerometer=(), camera=(), display-capture=(), geolocation=(), gyroscope=(), microphone=(), payment=(), usb=()"
   Header set Cross-Origin-Resource-Policy "same-origin"
   Header set Cross-Origin-Opener-Policy "same-origin"
-
-  # HSTS når forespørselen allerede er HTTPS (eller TLS er terminert foran)
   Header set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
-
-  # CSP for direkte treff på content/*.html (tavlen via index.php får CSP fra PHP)
   <FilesMatch "\.(html?)$">
     Header set Content-Security-Policy "default-src 'self'; base-uri 'self'; form-action 'self'; frame-ancestors 'none'; object-src 'none'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com data:; img-src 'self' data: https:; connect-src 'self' https://api.entur.io; worker-src 'none'; manifest-src 'self'; upgrade-insecure-requests"
   </FilesMatch>
-
   <FilesMatch "\.(woff2|png)$">
     Header set Cache-Control "public, max-age=604800, immutable"
   </FilesMatch>
@@ -57,4 +48,9 @@ Options -Indexes
 
 <IfModule mod_deflate.c>
   AddOutputFilterByType DEFLATE text/html text/css application/javascript application/json application/manifest+json image/svg+xml
+</IfModule>
+
+<IfModule mod_mime.c>
+  AddType font/woff2 .woff2
+  AddType application/manifest+json .webmanifest
 </IfModule>
