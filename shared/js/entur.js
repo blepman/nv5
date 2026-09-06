@@ -706,6 +706,11 @@
       toName: (leg.toPlace && leg.toPlace.name) || "",
       lineCode: line.publicCode || "",
       lineName: line.name || "",
+      lineDestination:
+        (leg.fromEstimatedCall &&
+          leg.fromEstimatedCall.destinationDisplay &&
+          leg.fromEstimatedCall.destinationDisplay.frontText) ||
+        "",
       transportMode: line.transportMode || leg.mode || "",
       colour: presentation.colour ? "#" + presentation.colour : "",
       textColour: presentation.textColour ? "#" + presentation.textColour : "",
@@ -758,6 +763,9 @@
     duration
     fromPlace { name }
     toPlace { name }
+    fromEstimatedCall {
+      destinationDisplay { frontText }
+    }
     line {
       publicCode
       name
