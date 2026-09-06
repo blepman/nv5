@@ -1,4 +1,4 @@
-# Agent-regler for nv5-sis
+# Agent-regler for nv5
 
 Kortfil for agenter. Detaljer og bakgrunn: [`docs/PROJECT_KNOWLEDGE.md`](docs/PROJECT_KNOWLEDGE.md). Drift for mennesker: [`README.md`](README.md).
 
