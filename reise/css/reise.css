@@ -218,21 +218,55 @@
 .trip-pattern__overview {
   display: flex;
   flex-direction: column;
-  gap: 0.2rem;
+  gap: 0.45rem;
   min-width: 0;
 }
 
-.trip-pattern__overview strong {
+.trip-pattern__chips {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.3rem;
+}
+
+.trip-summary-chip {
+  min-width: 1.85rem;
+  height: 1.85rem;
+  padding: 0 0.4rem;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 0.32rem;
+  font-weight: 700;
+  font-size: 0.84rem;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  border: 1px solid var(--line);
+}
+
+.trip-summary-chip--walk {
+  font-size: 0.68rem;
+  font-weight: 600;
+  color: var(--muted);
+}
+
+.trip-summary-arrow {
+  color: var(--muted);
+  font-size: 0.78rem;
+  line-height: 1;
+}
+
+.trip-pattern__meta-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+}
+
+.trip-pattern__meta-row strong {
   font-size: 0.95rem;
 }
 
-.trip-pattern__route {
-  font-size: 0.84rem;
-  color: var(--text);
-  line-height: 1.35;
-}
-
-.trip-pattern__overview > span:last-child {
+.trip-pattern__meta-row span {
   font-size: 0.8rem;
   color: var(--muted);
 }
@@ -334,6 +368,14 @@
 
 .trip-leg__top strong {
   font-size: 0.95rem;
+}
+
+.trip-leg__title-row {
+  display: flex;
+  align-items: baseline;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.5rem;
+  min-width: 0;
 }
 
 .trip-leg__headsign {
