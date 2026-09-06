@@ -801,6 +801,8 @@
       textColour: presentation.textColour || "",
       startTime: parseTime(leg.expectedStartTime || leg.aimedStartTime),
       endTime: parseTime(leg.expectedEndTime || leg.aimedEndTime),
+      duration: Number(leg.duration) || 0,
+      distance: Number(leg.distance) || 0,
       situations: situations,
       occupancyStatus: occupancyStatus,
       occupancyLabel: occupancyLabel(occupancyStatus),
@@ -814,13 +816,41 @@
     return Math.max(0, transit.length - 1);
   }
 
+  function tripPatternTiming(legs) {
+    var walkDuration = 0;
+    var transferDuration = 0;
+    (legs || []).forEach(function (leg, index) {
+      if (leg.mode === "foot" && leg.duration) {
+        walkDuration += leg.duration;
+      }
+      if (index > 0) {
+        var previous = legs[index - 1];
+        if (previous.endTime && leg.startTime) {
+          var gap = Math.round(
+            (leg.startTime.getTime() - previous.endTime.getTime()) / 1000
+          );
+          if (gap > 0) {
+            transferDuration += gap;
+          }
+        }
+      }
+    });
+    return {
+      walkDuration: walkDuration,
+      transferDuration: transferDuration,
+    };
+  }
+
   function normalizeTripPattern(pattern) {
     var legs = (pattern.legs || []).map(normalizeTripLeg);
+    var timing = tripPatternTiming(legs);
     return {
       startTime: parseTime(pattern.startTime),
       endTime: parseTime(pattern.endTime),
       duration: Number(pattern.duration) || 0,
       walkDistance: Number(pattern.walkDistance) || 0,
+      walkDuration: timing.walkDuration,
+      transferDuration: timing.transferDuration,
       changes: countTripChanges(pattern.legs || []),
       legs: legs,
     };
