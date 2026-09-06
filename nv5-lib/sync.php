@@ -68,7 +68,7 @@ function nv5_run(string $appId, string $appRoot): void
 
         if ($sync['reise']) {
             nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, true);
-        } elseif (($appId === 'reise' || $sync['all']) && nv5_should_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL)) {
+        } elseif ($appId === 'reise' && nv5_should_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL)) {
             nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, false);
         }
 
@@ -100,40 +100,38 @@ function nv5_parse_sync(string $appId): array
 {
     $param = isset($_GET['sync']) ? strtolower(trim((string) $_GET['sync'])) : '';
 
-    $server = in_array($param, ['server', 'env', 'both', 'all', '1'], true);
-    $shared = in_array($param, ['shared', 'env', 'all'], true);
-    $admin = in_array($param, ['admin', 'env', 'all'], true);
-    $sis = in_array($param, ['sis', 'main', 'board', 'both', 'all', '1'], true);
-    $reise = in_array($param, ['reise', 'all'], true);
-    $all = $param === 'all';
+    if ($appId === 'sis') {
+        return [
+            'param' => $param,
+            'server' => false,
+            'shared' => false,
+            'admin' => false,
+            'sis' => in_array($param, ['1', 'sis', 'main', 'board'], true),
+            'reise' => false,
+            'all' => false,
+        ];
+    }
 
-    if ($appId === 'sis' && !in_array($param, ['server', 'shared', 'admin', 'reise', 'all', 'env'], true)) {
-        $server = in_array($param, ['both', '1'], true);
-    }
     if ($appId === 'reise') {
-        $server = false;
-        $shared = false;
-        $admin = false;
-        $sis = false;
-        $reise = in_array($param, ['reise', 'all', '1'], true);
-        $all = $param === 'all';
-    }
-    if ($appId === 'admin' && $param === '') {
-        $server = false;
-        $shared = false;
-        $admin = false;
-        $sis = false;
-        $reise = false;
+        return [
+            'param' => $param,
+            'server' => false,
+            'shared' => false,
+            'admin' => false,
+            'sis' => false,
+            'reise' => in_array($param, ['1', 'reise'], true),
+            'all' => false,
+        ];
     }
 
     return [
         'param' => $param,
-        'server' => $server,
-        'shared' => $shared,
-        'admin' => $admin,
-        'sis' => $sis,
-        'reise' => $reise,
-        'all' => $all,
+        'server' => in_array($param, ['server', 'env', 'all'], true),
+        'shared' => in_array($param, ['shared', 'env', 'all'], true),
+        'admin' => in_array($param, ['admin', 'env', 'all'], true),
+        'sis' => in_array($param, ['sis', 'all'], true),
+        'reise' => in_array($param, ['reise', 'all'], true),
+        'all' => $param === 'all',
     ];
 }
 
