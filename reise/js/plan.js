@@ -299,6 +299,10 @@
     return (placeName || "Holdeplass") + " " + quayCode;
   }
 
+  function legStopLabel(name, quayCode) {
+    return quayPlatformLabel(name, quayCode) || name || "";
+  }
+
   function renderSummaryChip(leg) {
     if (leg.mode === "foot") {
       return '<span class="trip-summary-chip trip-summary-chip--walk">Gå</span>';
@@ -341,7 +345,11 @@
         return leg.fromQuayDescription + " → " + leg.toQuayDescription;
       }
     }
-    return leg.fromName + " → " + leg.toName;
+    return (
+      legStopLabel(leg.fromName, leg.fromQuay) +
+      " → " +
+      legStopLabel(leg.toName, leg.toQuay)
+    );
   }
 
   function legModeUnderBadge(leg) {
