@@ -34,23 +34,28 @@ Raw: https://raw.githubusercontent.com/blepman/nv5-sis/server/index-initial.php
 
 SIS-innstillinger (cookie `nv5_github_interval`) styrer automatisk sjekk av **kun SIS**-innhold.
 
-## Host-layout (env-nv5)
-
-På prod ligger webroot og secrets side om side:
+## Host-layout (haatetepe.no / env-nv5)
 
 ```
 (konto-roten)/
-├── www/                 # webroot — admin/, sis/, reise/, shared/, …
+├── www/                         # webroot for haatetepe.no
+│   └── nv5/                     # document root for nv5.haatetepe.no
+│       ├── admin/
+│       ├── sis/
+│       ├── reise/
+│       └── shared/
 └── env/
-    └── env-nv5/
-        └── config.php   # ved siden av www — ikke inni www/
+    └── env-nv5/                 # secrets for nv5-subdomenet
+        ├── config.php           # felles (admin-passord, GitHub-token, …)
+        ├── admin/               # valgfritt per app
+        └── sis/                 # valgfritt per app
 ```
 
-`config.php` opprettes i **env/env-nv5 ved siden av www** (søster-mappe til `www/`, ikke `www/env/`). Ved feilplassering inni www flyttes filen automatisk ved sync/admin.
+PHP finner `env/env-nv5` ved å gå opp til `www/` og deretter ett hakk til siden (`../env/env-nv5`). **Ikke** `www/env/…` og **ikke** `www/nv5/env/…`.
 
-Hvis PHP kjører i chroot og ikke ser mappen over www: sett **`NV5_ENV_DIR`** til absolutt sti (f.eks. `/home/konto/env/env-nv5`) i host-miljøet.
+`config.php` opprettes automatisk ved sync/admin hvis den mangler. Eksisterende fil overskrives ikke.
 
-Filrettigheter settes slik at du kan redigere `config.php` i filbehandler/SFTP (0644).
+Hvis auto-sti feiler: sett **`NV5_ENV_DIR`** til absolutt sti i host-miljøet.
 
 PHP leser i rekkefølge: `getenv()` → `env/env-nv5/config.php` → enkeltfil i `env/env-nv5/` → state-mappe (fallback).
 

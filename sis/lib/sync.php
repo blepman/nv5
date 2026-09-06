@@ -374,16 +374,55 @@ function nv5_site_root_real(string $siteRoot): string
     return rtrim(str_replace('\\', '/', $path), '/');
 }
 
+function nv5_resolve_www_dir(string $siteRoot): ?string
+{
+    $cursor = nv5_site_root_real($siteRoot);
+    while ($cursor !== '' && $cursor !== '/') {
+        if (basename($cursor) === 'www') {
+            return $cursor;
+        }
+        $parent = dirname($cursor);
+        if ($parent === $cursor) {
+            break;
+        }
+        $cursor = $parent;
+    }
+    return null;
+}
+
 function nv5_webroot_env_dir(string $siteRoot): string
 {
     return nv5_site_root_real($siteRoot) . '/env/env-nv5';
 }
 
+/**
+ * @return list<string>
+ */
+function nv5_legacy_host_env_dirs(string $siteRoot): array
+{
+    $dirs = [nv5_webroot_env_dir($siteRoot)];
+    $www = nv5_resolve_www_dir($siteRoot);
+    if ($www !== null) {
+        $dirs[] = $www . '/env/env-nv5';
+    }
+    $dirs = array_values(array_unique($dirs));
+    $correct = nv5_host_env_dir($siteRoot);
+    return array_values(array_filter($dirs, static fn(string $dir): bool => $dir !== $correct));
+}
+
 function nv5_host_env_parent_accessible(string $siteRoot): bool
 {
-    $root = nv5_site_root_real($siteRoot);
-    $parent = dirname($root);
-    return $parent !== $root && $parent !== '' && $parent !== '/' && is_dir($parent);
+    if (trim((string) (getenv('NV5_ENV_DIR') ?: '')) !== '') {
+        return true;
+    }
+
+    $envNv5 = nv5_host_env_dir($siteRoot);
+    $envRoot = dirname($envNv5);
+    $accountRoot = dirname($envRoot);
+    if ($accountRoot === '' || $accountRoot === '/' || !is_dir($accountRoot)) {
+        return false;
+    }
+    return is_dir($envRoot) || is_writable($accountRoot);
 }
 
 function nv5_host_env_dir(string $siteRoot): string
@@ -391,6 +430,11 @@ function nv5_host_env_dir(string $siteRoot): string
     $fromEnv = trim((string) (getenv('NV5_ENV_DIR') ?: ''));
     if ($fromEnv !== '') {
         return rtrim(str_replace('\\', '/', $fromEnv), '/');
+    }
+
+    $www = nv5_resolve_www_dir($siteRoot);
+    if ($www !== null) {
+        return dirname($www) . '/env/env-nv5';
     }
 
     $root = nv5_site_root_real($siteRoot);
@@ -421,13 +465,7 @@ HTACCESS;
 
 function nv5_migrate_host_env_from_webroot(string $siteRoot): void
 {
-    $wrong = nv5_webroot_env_dir($siteRoot);
     $correct = nv5_host_env_dir($siteRoot);
-    if ($wrong === $correct) {
-        nv5_block_webroot_env_http($siteRoot);
-        return;
-    }
-
     if (!nv5_host_env_parent_accessible($siteRoot)) {
         nv5_block_webroot_env_http($siteRoot);
         return;
@@ -440,25 +478,32 @@ function nv5_migrate_host_env_from_webroot(string $siteRoot): void
         return;
     }
 
-    $wrongConfig = $wrong . '/config.php';
     $correctConfig = $correct . '/config.php';
-    if (is_file($wrongConfig) && !is_file($correctConfig)) {
-        if (!@rename($wrongConfig, $correctConfig)) {
-            $data = file_get_contents($wrongConfig);
-            if ($data !== false) {
-                nv5_write_atomic($correctConfig, $data);
-                @unlink($wrongConfig);
+    foreach (nv5_legacy_host_env_dirs($siteRoot) as $wrong) {
+        if (!is_dir($wrong)) {
+            continue;
+        }
+        $wrongConfig = $wrong . '/config.php';
+        if (is_file($wrongConfig) && !is_file($correctConfig)) {
+            if (!@rename($wrongConfig, $correctConfig)) {
+                $data = file_get_contents($wrongConfig);
+                if ($data !== false) {
+                    nv5_write_atomic($correctConfig, $data);
+                    @unlink($wrongConfig);
+                }
+            }
+            @chmod($correctConfig, 0644);
+        }
+        if (is_dir($wrong)) {
+            $entries = array_diff(scandir($wrong) ?: [], ['.', '..']);
+            if ($entries === []) {
+                @rmdir($wrong);
             }
         }
-        @chmod($correctConfig, 0644);
-    }
-
-    if (is_dir($wrong)) {
-        $entries = array_diff(scandir($wrong) ?: [], ['.', '..']);
-        if ($entries === []) {
-            @rmdir($wrong);
-            $legacyEnv = dirname($wrong);
-            if (is_dir($legacyEnv) && array_diff(scandir($legacyEnv) ?: [], ['.', '..', '.htaccess']) === []) {
+        $legacyEnv = dirname($wrong);
+        if (is_dir($legacyEnv) && str_ends_with($legacyEnv, '/env')) {
+            $left = array_diff(scandir($legacyEnv) ?: [], ['.', '..', '.htaccess']);
+            if ($left === []) {
                 @unlink($legacyEnv . '/.htaccess');
                 @rmdir($legacyEnv);
             }
@@ -629,7 +674,16 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         return [
             'active' => false,
             'source' => '',
-            'hint' => 'env/env-nv5 ligger feil inni www/. Flytt til env/env-nv5 ved siden av www (sync/admin prøver automatisk).',
+            'hint' => 'env/env-nv5 ligger feil inni nv5-mappen. Riktig sted er env/env-nv5 ved siden av www (sync/admin flytter automatisk).',
+        ];
+    }
+
+    $www = nv5_resolve_www_dir($siteRoot);
+    if ($www !== null && is_dir($www . '/env/env-nv5')) {
+        return [
+            'active' => false,
+            'source' => '',
+            'hint' => 'env/env-nv5 ligger feil inni www/. Riktig sted er env/env-nv5 ved siden av www (søster til www, ikke under).',
         ];
     }
 
