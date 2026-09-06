@@ -296,7 +296,7 @@
     if (!quayCode) {
       return "";
     }
-    return (placeName || "Holdeplass") + " " + quayCode;
+    return (placeName || "Holdeplass") + " pltf. " + quayCode;
   }
 
   function legStopLabel(name, quayCode) {
