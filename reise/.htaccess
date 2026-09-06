@@ -1,0 +1,22 @@
+DirectoryIndex index.php
+Options -Indexes
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteRule ^content/index\.html$ /reise/ [R=302,L]
+  RewriteRule ^content/?$ /reise/ [R=302,L]
+  RewriteRule ^content/.*\.php$ - [F,L]
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "no-referrer"
+  Header set X-Frame-Options "DENY"
+  Header set Strict-Transport-Security "max-age=31536000; includeSubDomains" env=HTTPS
+  <FilesMatch "\.(woff2|png)$">
+    Header set Cache-Control "public, max-age=604800, immutable"
+  </FilesMatch>
+  <FilesMatch "\.(css|js|webmanifest)$">
+    Header set Cache-Control "public, max-age=300"
+  </FilesMatch>
+</IfModule>
