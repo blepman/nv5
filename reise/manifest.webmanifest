@@ -1,0 +1,20 @@
+{
+  "name": "NV5 Reise",
+  "short_name": "NV5 Reise",
+  "description": "Reiseplanlegger for kollektivtrafikk",
+  "id": "/reise/",
+  "start_url": "/reise/",
+  "scope": "/reise/",
+  "display": "standalone",
+  "background_color": "#0b1220",
+  "theme_color": "#0b1220",
+  "lang": "nb",
+  "icons": [
+    {
+      "src": "icons/icon-192.png",
+      "sizes": "192x192",
+      "type": "image/png",
+      "purpose": "any"
+    }
+  ]
+}

@@ -776,6 +776,9 @@
   }
 
   function escapeHtml(value) {
+    if (window.NV5Util && typeof window.NV5Util.escapeHtml === "function") {
+      return window.NV5Util.escapeHtml(value);
+    }
     return String(value)
       .replace(/&/g, "&amp;")
       .replace(/</g, "&lt;")
@@ -2174,6 +2177,19 @@
       els.addStopOpen.addEventListener("click", function () {
         closeMenu();
         openAddStop();
+      });
+    }
+    var openReise = document.getElementById("openReise");
+    if (openReise) {
+      openReise.addEventListener("click", function () {
+        closeMenu();
+        var reisePath = "/reise/";
+        if (location.pathname.indexOf("/sis") === 0) {
+          reisePath = "/reise/";
+        } else if (location.pathname.indexOf("/reise") === 0) {
+          reisePath = "../reise/";
+        }
+        window.location.href = reisePath;
       });
     }
     if (els.settingsTabs) {

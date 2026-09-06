@@ -59,16 +59,12 @@ Tillit ligger i GitHub-skrivetilgang, ikke i en sync-nøkkel.
 
 **Filer (`main`):**
 
-| Fil | Rolle |
+| Mappe | Rolle |
 |---|---|
-| `index.html` | Layout, meny, settings, footer |
-| `config.js` | Defaults |
-| `js/boot.js` | Tidlig boot |
-| `js/entur.js` | Entur GraphQL + geocoder |
-| `js/site.js` | UI, poll, innstillinger, rad-layout |
-| `css/kiosk.css` | Kiosk-stil |
-| `icons/` | Favicon, PWA-ikoner |
-| `manifest.webmanifest` | PWA |
+| `sis/` | Tavle: HTML/CSS/JS, icons, manifest |
+| `reise/` | Planlegger (under utvikling) |
+| `shared/` | `entur.js`, `util.js`, `tokens.css`, fonts |
+| `docs/` | Kunnskap og planer |
 
 ---
 

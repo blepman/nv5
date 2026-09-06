@@ -4,7 +4,7 @@ Kortfil for agenter. Detaljer og bakgrunn: [`docs/PROJECT_KNOWLEDGE.md`](docs/PR
 
 ## Oppdrag
 
-NV5-SIS er en **sanntidstavle (kiosk)** på `https://nv5.haatetepe.no/sis/`. Standard fokusus: holdeplassavganger fra Entur, lesbar på stor skjerm / iPhone PWA — ikke et generelt reiseplanleggingsprodukt.
+NV5-SIS er en **sanntidstavle (kiosk)** på `https://nv5.haatetepe.no/sis/`. Reiseplanlegger: `/reise/` (egen mappe `reise/`). Delt kode: `shared/`.
 
 ## Git og leveranse
 

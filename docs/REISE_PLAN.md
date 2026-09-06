@@ -145,13 +145,13 @@ Alt under er **must-have** før v1 regnes som ferdig:
 
 ### Fase 0 — Struktur (før funksjon)
 
-| # | Oppgave | Leveranse |
-|---|---------|-----------|
-| 0.1 | Flytt SIS-filer til `sis/` | Ingen bruker-synlig endring på `/sis/` |
-| 0.2 | Opprett `shared/` med utskilt `entur.js` + `tokens.css` | SIS bygger på shared uten funksjonsendring |
-| 0.3 | Opprett `reise/` med minimal «kommer snart»-side | Kan testes lokalt |
-| 0.4 | Oppdater `server` + nginx for begge paths | `/reise/` svarer på nett |
-| 0.5 | Dokumenter sync og mappestruktur i README | Drift forstått |
+| # | Oppgave | Leveranse | Status |
+|---|---------|-----------|--------|
+| 0.1 | Flytt SIS-filer til `sis/` | Ingen bruker-synlig endring på `/sis/` | ✅ |
+| 0.2 | Opprett `shared/` med utskilt `entur.js` + `tokens.css` | SIS bygger på shared | ✅ |
+| 0.3 | Opprett `reise/` med minimal «kommer snart»-side | Testes lokalt | ✅ |
+| 0.4 | Oppdater `server` + nginx for begge paths | `/reise/` live | 🔲 delvis (sis-sync; reise PHP følger) |
+| 0.5 | Dokumenter sync og mappestruktur i README | Drift forstått | ✅ |
 
 **Exit:** `/sis/` fungerer som før; `/reise/` eksisterer (tom eller placeholder).
 

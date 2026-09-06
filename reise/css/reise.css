@@ -1,0 +1,58 @@
+@import url("../shared/css/tokens.css");
+
+.reise {
+  min-height: 100dvh;
+  display: grid;
+  grid-template-rows: auto 1fr auto;
+  padding: calc(1rem + var(--safe-top)) 1rem calc(1rem + var(--safe-bottom));
+  max-width: 36rem;
+  margin: 0 auto;
+}
+
+.reise__header h1 {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: 700;
+}
+
+.reise__tagline {
+  margin: 0.35rem 0 0;
+  color: var(--muted);
+  font-size: 0.95rem;
+}
+
+.reise__main {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1.5rem 0;
+}
+
+.reise__lead {
+  margin: 0;
+  line-height: 1.5;
+}
+
+.reise__planned {
+  margin: 0;
+  padding-left: 1.2rem;
+  color: var(--muted);
+  line-height: 1.6;
+}
+
+.reise__link {
+  color: var(--accent);
+  text-decoration: none;
+  font-weight: 600;
+}
+
+.reise__link:hover,
+.reise__link:focus-visible {
+  text-decoration: underline;
+}
+
+.reise__footer {
+  border-top: 1px solid var(--line);
+  padding-top: 0.75rem;
+  font-size: 0.85rem;
+}
