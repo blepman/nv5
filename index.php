@@ -125,7 +125,8 @@ try {
     }
 
     // 2) Speil main → content/
-    $shouldSyncBoard = $forceBoardSync || should_check_github(
+    $boardContentValid = board_content_looks_valid($content);
+    $shouldSyncBoard = $forceBoardSync || !$boardContentValid || should_check_github(
         $boardCheckIntervalSeconds,
         $content . '/index.html',
         $boardCheckFile
@@ -139,7 +140,8 @@ try {
             $content,
             $contentTmp,
             $boardShaFile,
-            $boardCheckFile
+            $boardCheckFile,
+            $forceBoardSync
         ): void {
             sync_board_from_github(
                 $owner,
@@ -148,7 +150,8 @@ try {
                 $ua,
                 $content,
                 $contentTmp,
-                $boardShaFile
+                $boardShaFile,
+                $forceBoardSync
             );
             file_put_contents($boardCheckFile, (string) time());
         });
@@ -161,7 +164,8 @@ try {
                 $content,
                 $contentTmp,
                 $boardShaFile,
-                $boardCheckFile
+                $boardCheckFile,
+                $forceBoardSync
             ): void {
                 sync_board_from_github(
                     $owner,
@@ -170,7 +174,8 @@ try {
                     $ua,
                     $content,
                     $contentTmp,
-                    $boardShaFile
+                    $boardShaFile,
+                    true
                 );
                 file_put_contents($boardCheckFile, (string) time());
             }, true);
@@ -819,6 +824,20 @@ function sync_server_branch(
     }
 }
 
+function board_content_looks_valid(string $contentDir): bool
+{
+    $path = $contentDir . '/index.html';
+    if (!is_file($path)) {
+        return false;
+    }
+    $html = file_get_contents($path);
+    if ($html === false) {
+        return false;
+    }
+    // Kiosk-tavlen har alltid #board. Rot-stub fra mono-repo-migrering har ikke dette.
+    return stripos($html, 'id="board"') !== false;
+}
+
 function sync_board_from_github(
     string $owner,
     string $repo,
@@ -826,7 +845,8 @@ function sync_board_from_github(
     string $ua,
     string $content,
     string $tmp,
-    string $shaFile
+    string $shaFile,
+    bool $force = false
 ): void {
     $o = rawurlencode($owner);
     $r = rawurlencode($repo);
@@ -839,7 +859,12 @@ function sync_board_from_github(
     }
 
     $local = is_file($shaFile) ? trim((string) file_get_contents($shaFile)) : '';
-    if ($remote === $local && is_file($content . '/index.html')) {
+    if (
+        !$force
+        && $remote === $local
+        && is_file($content . '/index.html')
+        && board_content_looks_valid($content)
+    ) {
         return;
     }
 
