@@ -9,6 +9,7 @@ Sanntidstavle vist på `https://nv5.haatetepe.no/sis/`.
 | [README.md](README.md) (denne) | Drift / oppsett | Sync, branches, kiosk, filer |
 | [AGENTS.md](AGENTS.md) | AI-agenter | Harde regler, scope, merge-vaner |
 | [docs/PROJECT_KNOWLEDGE.md](docs/PROJECT_KNOWLEDGE.md) | Agenter + vedlikeholdere | UI-lover, Entur-fakta, anti-mønstre, Tognr-peker |
+| [docs/REISE_PLAN.md](docs/REISE_PLAN.md) | Alle | Plan for reiseplanleggeren på `/reise/` |
 
 **Levende kunnskap:** Når noe nytt læres i arbeid eller samtale som er verdt å huske, oppdater `docs/PROJECT_KNOWLEDGE.md` (og `AGENTS.md` / denne README bare hvis regler eller drift endres).
 

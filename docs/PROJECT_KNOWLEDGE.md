@@ -7,7 +7,19 @@ Levende kunnskapsbase for mennesker og agenter.
 - Drift / sync / kiosk-oppsett: [`README.md`](../README.md)
 - Vognløp-prediksjon (eget spor): se [Tognr / handoff](#tognr--vognløp-eget-spor) — **ikke** full algoritme her
 
-**Sist vesentlig oppdatert:** 2026-07-23
+**Sist vesentlig oppdatert:** 2026-09-06
+
+---
+
+## 0. NV5-plattform (SIS + Reise)
+
+| App | URL | Formål |
+|---|---|---|
+| **SIS** | `https://nv5.haatetepe.no/sis/` | Sanntidstavle (kiosk / PWA) |
+| **Reise** | `https://nv5.haatetepe.no/reise/` | Reiseplanlegger (eget spor) |
+
+Miljø: `env-nv5`. Repo-struktur (mål): `sis/`, `reise/`, `shared/`, `docs/`.  
+Full plan: [`docs/REISE_PLAN.md`](REISE_PLAN.md).
 
 ---
 
@@ -19,7 +31,9 @@ Levende kunnskapsbase for mennesker og agenter.
 | Formål | Sanntids **avgangstavle** (kiosk / PWA) for kollektivtrafikk |
 | Default | Tveita T, kai `NSR:Quay:11309` (mot sentrum) |
 | Data | Entur Journey Planner GraphQL (+ geocoder for søk) |
-| Ikke | Full reiseplanlegger; ikke Sporveien-operasjonsverktøy; ikke vognløp-UI (foreløpig) |
+| Ikke | Sporveien-operasjonsverktøy; ikke vognløp-UI (foreløpig) |
+
+Reiseplanlegger lever i **eget spor** på `/reise/` — ikke i SIS. Se [`docs/REISE_PLAN.md`](REISE_PLAN.md).
 
 Klientnavn mot Entur: `haatetepe-nv5-sis` (`config.js`).
 
@@ -174,6 +188,7 @@ Kort fakta (detaljer og kode ligger i separat handoff hos eier / evt. privat `To
 
 | Dato | Endring |
 |---|---|
+| 2026-09-06 | NV5-plattform: SIS + Reise (`/reise/`), peker til REISE_PLAN.md |
 | 2026-07-23 | Første versjon: arkitektur, UI-lover, Entur, Tognr-peker, agentpreferanser, anti-mønstre |
 
 Når du oppdaterer: legg en rad her + endre «Sist vesentlig oppdatert» øverst.
