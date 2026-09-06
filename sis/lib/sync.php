@@ -6,8 +6,8 @@ declare(strict_types=1);
  */
 
 const NV5_OWNER = 'blepman';
-const NV5_REPO = 'nv5-sis';
-const NV5_UA = 'nv5-sis-server';
+const NV5_REPO = 'nv5';
+const NV5_UA = 'nv5-server';
 const NV5_SERVER_BRANCH = 'server';
 const NV5_BOARD_BRANCH = 'main';
 const NV5_SERVER_CHECK_INTERVAL = 3600;
