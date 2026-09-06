@@ -273,17 +273,19 @@
 }
 
 .trip-summary-chip {
+  min-height: 1.85rem;
   min-width: 1.85rem;
-  height: 1.85rem;
-  padding: 0 0.4rem;
+  padding: 0.15rem 0.45rem;
   display: inline-flex;
   align-items: center;
   justify-content: center;
   border-radius: 0.32rem;
   font-weight: 700;
-  font-size: 0.84rem;
+  font-size: 0.78rem;
+  line-height: 1.15;
   background: color-mix(in srgb, var(--bg) 70%, transparent);
   border: 1px solid var(--line);
+  max-width: 100%;
 }
 
 .trip-summary-chip--walk {

@@ -292,22 +292,36 @@
     return leg.lineDestination;
   }
 
-  function quayPlatformLabel(placeName, quayCode) {
+  function quayPlatformLabel(placeName, quayCode, headsign) {
     if (!quayCode) {
       return "";
     }
-    return (placeName || "Holdeplass") + " pltf. " + quayCode;
+    var label = (placeName || "Holdeplass") + " pltf. " + quayCode;
+    var dest = String(headsign || "").trim();
+    if (dest) {
+      label += " " + dest;
+    }
+    return label;
   }
 
-  function legStopLabel(name, quayCode) {
-    return quayPlatformLabel(name, quayCode) || name || "";
+  function legStopLabel(name, quayCode, headsign) {
+    return quayPlatformLabel(name, quayCode, headsign) || name || "";
+  }
+
+  function summaryChipLabel(leg) {
+    var code = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
+    var dest = String(leg.lineDestination || "").trim();
+    if (dest) {
+      return code + " " + dest;
+    }
+    return code;
   }
 
   function renderSummaryChip(leg) {
     if (leg.mode === "foot") {
       return '<span class="trip-summary-chip trip-summary-chip--walk">Gå</span>';
     }
-    var label = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
+    var label = summaryChipLabel(leg);
     return (
       '<span class="trip-summary-chip"' +
       lineStyleAttr(leg) +
@@ -346,7 +360,11 @@
       }
     }
     return (
-      legStopLabel(leg.fromName, leg.fromQuay) +
+      legStopLabel(
+        leg.fromName,
+        leg.fromQuay,
+        leg.mode !== "foot" ? leg.lineDestination : ""
+      ) +
       " → " +
       legStopLabel(leg.toName, leg.toQuay)
     );
