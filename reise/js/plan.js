@@ -444,13 +444,6 @@
     );
   }
 
-  function legModeUnderBadge(leg) {
-    if (leg.mode === "foot") {
-      return "Gange";
-    }
-    return modeLabel(leg.transportMode || leg.mode);
-  }
-
   function legBadgeText(leg) {
     return leg.lineCode || modeLabel(leg.transportMode || leg.mode);
   }
@@ -522,9 +515,6 @@
       escapeHtml(legTitle(leg)) +
       "</strong>" +
       headsignHtml +
-      '<span class="trip-timeline__mode">' +
-      escapeHtml(legModeUnderBadge(leg)) +
-      "</span>" +
       "</div>" +
       '<time class="trip-timeline__time">' +
       escapeHtml(formatClock(leg.startTime)) +
