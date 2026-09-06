@@ -1,0 +1,25 @@
+Options -Indexes
+
+<IfModule mod_authz_core.c>
+  <FilesMatch "(?i)^(README\.md|nginx-nv5\.conf|index-initial\.php)$">
+    Require all denied
+  </FilesMatch>
+  <FilesMatch "^\.">
+    Require all denied
+  </FilesMatch>
+</IfModule>
+<IfModule !mod_authz_core.c>
+  <FilesMatch "(?i)^(README\.md|nginx-nv5\.conf|index-initial\.php)$">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+  <FilesMatch "^\.">
+    Order allow,deny
+    Deny from all
+  </FilesMatch>
+</IfModule>
+
+<IfModule mod_headers.c>
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "no-referrer"
+</IfModule>

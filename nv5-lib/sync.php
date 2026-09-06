@@ -386,7 +386,9 @@ function nv5_server_sync_skip_web(): array
 function nv5_server_sync_required_files(): array
 {
     return [
+        '.htaccess',
         'nv5-lib/sync.php',
+        'nv5-lib/.htaccess',
         'admin/index.php',
         'admin/.htaccess',
         'sis/index.php',
