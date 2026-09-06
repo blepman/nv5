@@ -2,7 +2,9 @@
 declare(strict_types=1);
 
 /**
- * Engangs bootstrap for env-nv5.
+ * Eldre engangs bootstrap (uten admin-passordskjema).
+ *
+ * Anbefalt: bruk nv5-init.php i stedet — setter admin-bruker/passord og sletter seg selv.
  *
  * 1. Last opp denne fila til site root (mappen som inneholder sis/).
  * 2. Åpne https://nv5.haatetepe.no/index-initial.php?run=1
