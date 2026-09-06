@@ -23,6 +23,7 @@ function nv5_run(string $appId, string $appRoot): void
 {
     $siteRoot = dirname($appRoot);
     $GLOBALS['nv5_site_root'] = $siteRoot;
+    $GLOBALS['nv5_app_id'] = $appId;
     $stateDir = nv5_ensure_state_dir($siteRoot);
     nv5_migrate_and_scrub_webroot_state($appRoot, $stateDir);
 
@@ -516,26 +517,15 @@ function nv5_migrate_host_env_from_webroot(string $siteRoot): void
 /**
  * @return array<string, string>
  */
-function nv5_host_env_config(string $siteRoot): array
+function nv5_load_env_config_file(string $path): array
 {
-    static $cache = [];
-    $dir = nv5_host_env_dir($siteRoot);
-    if (array_key_exists($dir, $cache)) {
-        return $cache[$dir];
-    }
-
-    $path = $dir . '/config.php';
     if (!is_readable($path)) {
-        $cache[$dir] = [];
         return [];
     }
-
     $loaded = require $path;
     if (!is_array($loaded)) {
-        $cache[$dir] = [];
         return [];
     }
-
     $normalized = [];
     foreach ($loaded as $key => $value) {
         if (!is_string($key) || (!is_string($value) && !is_int($value) && !is_float($value))) {
@@ -543,19 +533,51 @@ function nv5_host_env_config(string $siteRoot): array
         }
         $normalized[$key] = trim((string) $value);
     }
-
-    $cache[$dir] = $normalized;
     return $normalized;
 }
 
-function nv5_host_env(string $siteRoot, string $name): string
+function nv5_app_env_dir(string $siteRoot, string $appId): string
+{
+    return nv5_host_env_dir($siteRoot) . '/' . $appId;
+}
+
+/**
+ * @return array<string, string>
+ */
+function nv5_host_env_merged_config(string $siteRoot, ?string $appId = null): array
+{
+    static $cache = [];
+    $appId = $appId ?? (string) ($GLOBALS['nv5_app_id'] ?? '');
+    $cacheKey = nv5_host_env_dir($siteRoot) . '|' . $appId;
+    if (array_key_exists($cacheKey, $cache)) {
+        return $cache[$cacheKey];
+    }
+
+    $merged = nv5_load_env_config_file(nv5_host_env_dir($siteRoot) . '/config.php');
+    if ($appId !== '') {
+        $merged = array_merge($merged, nv5_load_env_config_file(nv5_app_env_dir($siteRoot, $appId) . '/config.php'));
+    }
+
+    $cache[$cacheKey] = $merged;
+    return $merged;
+}
+
+/**
+ * @return array<string, string>
+ */
+function nv5_host_env_config(string $siteRoot, ?string $appId = null): array
+{
+    return nv5_host_env_merged_config($siteRoot, $appId);
+}
+
+function nv5_host_env(string $siteRoot, string $name, ?string $appId = null): string
 {
     $fromEnv = trim((string) (getenv($name) ?: ''));
     if ($fromEnv !== '') {
         return $fromEnv;
     }
 
-    $fromConfig = nv5_host_env_config($siteRoot)[$name] ?? '';
+    $fromConfig = nv5_host_env_merged_config($siteRoot, $appId)[$name] ?? '';
     if ($fromConfig !== '') {
         return $fromConfig;
     }
@@ -565,6 +587,45 @@ function nv5_host_env(string $siteRoot, string $name): string
         return trim((string) file_get_contents($file));
     }
     return '';
+}
+
+/**
+ * @param array<string, string> $values
+ */
+function nv5_export_env_config_php(array $values): string
+{
+    return "<?php\ndeclare(strict_types=1);\n\nreturn " . var_export($values, true) . ";\n";
+}
+
+/**
+ * @param array<string, string> $values
+ */
+function nv5_write_env_config_file(string $path, array $values): void
+{
+    nv5_write_atomic($path, nv5_export_env_config_php($values));
+    @chmod($path, 0644);
+}
+
+/**
+ * @param array<string, string> $values
+ */
+function nv5_write_app_env_config(string $siteRoot, string $appId, array $values): void
+{
+    $dir = nv5_app_env_dir($siteRoot, $appId);
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
+        throw new RuntimeException('Kunne ikke lage ' . $dir);
+    }
+    @chmod($dir, 0755);
+    nv5_write_env_config_file($dir . '/config.php', $values);
+}
+
+function nv5_admin_env_configured(string $siteRoot): bool
+{
+    if (trim((string) (getenv('NV5_ADMIN_PASSWORD') ?: '')) !== '') {
+        return true;
+    }
+    $pass = nv5_host_env_merged_config($siteRoot, 'admin')['NV5_ADMIN_PASSWORD'] ?? '';
+    return $pass !== '';
 }
 
 function nv5_ensure_host_config(string $siteRoot): void
@@ -584,25 +645,29 @@ function nv5_ensure_host_config(string $siteRoot): void
     $path = $dir . '/config.php';
     if (is_file($path)) {
         @chmod($path, 0644);
-        return;
-    }
-
-    $template = <<<'PHP'
+    } else {
+        $template = <<<'PHP'
 <?php
 declare(strict_types=1);
 
 return [
-    'NV5_ADMIN_USER' => 'admin',
-    'NV5_ADMIN_PASSWORD' => '',
-    // 'NV5_GITHUB_TOKEN' => 'ghp_…',  // valgfri — unngår GitHub rate limit ved sync
+    // 'NV5_GITHUB_TOKEN' => 'ghp_…',
+    // 'NV5_SYNC_SERVER_KEY' => 'valgfri-nøkkel-for-?sync=server',
 ];
 
 PHP;
+        try {
+            nv5_write_atomic($path, $template);
+            @chmod($path, 0644);
+        } catch (Throwable $e) {
+        }
+    }
 
-    try {
-        nv5_write_atomic($path, $template);
-        @chmod($path, 0644);
-    } catch (Throwable $e) {
+    foreach (['admin', 'sis', 'reise'] as $appId) {
+        $appDir = nv5_app_env_dir($siteRoot, $appId);
+        if (!is_dir($appDir)) {
+            @mkdir($appDir, 0755, true);
+        }
     }
 }
 
@@ -624,11 +689,11 @@ function nv5_sync_server_secret(string $siteRoot, string $stateDir): string
  */
 function nv5_admin_credentials(string $siteRoot, string $stateDir): array
 {
-    $user = nv5_host_env($siteRoot, 'NV5_ADMIN_USER');
+    $user = nv5_host_env($siteRoot, 'NV5_ADMIN_USER', 'admin');
     if ($user === '') {
         $user = 'admin';
     }
-    $pass = nv5_host_env($siteRoot, 'NV5_ADMIN_PASSWORD');
+    $pass = nv5_host_env($siteRoot, 'NV5_ADMIN_PASSWORD', 'admin');
     if ($pass === '') {
         $file = $stateDir . '/admin-password';
         if (is_readable($file)) {
@@ -651,12 +716,30 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         ];
     }
 
-    $configPass = nv5_host_env_config($siteRoot)['NV5_ADMIN_PASSWORD'] ?? '';
+    $configPass = nv5_host_env_merged_config($siteRoot, 'admin')['NV5_ADMIN_PASSWORD'] ?? '';
     if ($configPass !== '') {
         return [
             'active' => true,
-            'source' => 'env/env-nv5/config.php',
+            'source' => 'env/env-nv5/admin/config.php',
             'hint' => '',
+        ];
+    }
+
+    $legacyRootPass = nv5_load_env_config_file(nv5_host_env_dir($siteRoot) . '/config.php')['NV5_ADMIN_PASSWORD'] ?? '';
+    if ($legacyRootPass !== '') {
+        return [
+            'active' => true,
+            'source' => 'env/env-nv5/config.php (flytt til admin/config.php)',
+            'hint' => '',
+        ];
+    }
+
+    $adminConfig = nv5_app_env_dir($siteRoot, 'admin') . '/config.php';
+    if (is_readable($adminConfig)) {
+        return [
+            'active' => false,
+            'source' => '',
+            'hint' => 'admin/config.php finnes — sett NV5_ADMIN_PASSWORD.',
         ];
     }
 
@@ -665,7 +748,7 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         return [
             'active' => false,
             'source' => '',
-            'hint' => 'config.php finnes — sett NV5_ADMIN_PASSWORD i env/env-nv5 ved siden av www.',
+            'hint' => 'Kjør nv5-init.php for å sette admin-bruker og passord, eller opprett env/env-nv5/admin/config.php.',
         ];
     }
 
@@ -854,7 +937,15 @@ function nv5_legacy_webroot_state_map(): array
  */
 function nv5_server_sync_skip_web(): array
 {
-    return ['README.md', '.gitignore', 'index-initial.php'];
+    return ['README.md', '.gitignore', 'index-initial.php', 'nv5-init.php'];
+}
+
+/**
+ * @return list<string>
+ */
+function nv5_server_scrub_webroot_files(): array
+{
+    return ['index-initial.php'];
 }
 
 /**
@@ -903,8 +994,9 @@ function nv5_migrate_and_scrub_webroot_state(string $appRoot, string $stateDir):
             }
         }
     }
-    foreach (nv5_server_sync_skip_web() as $name) {
-        $path = $appRoot . '/' . $name;
+    $siteRoot = dirname($appRoot);
+    foreach (nv5_server_scrub_webroot_files() as $name) {
+        $path = $siteRoot . '/' . $name;
         if (is_file($path)) {
             @unlink($path);
         }
