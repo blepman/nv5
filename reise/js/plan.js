@@ -202,24 +202,29 @@
     return (placeName || "Holdeplass") + " " + quayCode;
   }
 
-  function patternRouteSummary(pattern) {
-    var parts = [];
-    (pattern.legs || []).forEach(function (leg) {
-      if (leg.mode === "foot") {
-        if (leg.fromName && leg.fromName === leg.toName) {
-          parts.push("bytte " + leg.fromName);
-        } else {
-          parts.push("gå");
-        }
-        return;
+  function renderSummaryChip(leg) {
+    if (leg.mode === "foot") {
+      return '<span class="trip-summary-chip trip-summary-chip--walk">Gå</span>';
+    }
+    var label = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
+    return (
+      '<span class="trip-summary-chip"' +
+      lineStyleAttr(leg) +
+      ">" +
+      escapeHtml(label) +
+      "</span>"
+    );
+  }
+
+  function renderPatternRouteChips(pattern) {
+    var chips = [];
+    (pattern.legs || []).forEach(function (leg, index) {
+      if (index > 0) {
+        chips.push('<span class="trip-summary-arrow" aria-hidden="true">→</span>');
       }
-      if (leg.lineCode) {
-        parts.push("Linje " + leg.lineCode);
-      } else {
-        parts.push(modeLabel(leg.transportMode || leg.mode));
-      }
+      chips.push(renderSummaryChip(leg));
     });
-    return parts.join(" → ");
+    return chips.join("");
   }
 
   function legRoute(leg) {
@@ -276,9 +281,7 @@
               "</span>";
         var headsign = legHeadsign(leg);
         var headsignHtml = headsign
-          ? '<span class="trip-leg__headsign">Endestopp ' +
-            escapeHtml(headsign) +
-            "</span>"
+          ? '<span class="trip-leg__headsign">' + escapeHtml(headsign) + "</span>"
           : "";
         var situations = leg.situations.length
           ? '<p class="trip-leg__situation">' +
@@ -295,10 +298,12 @@
           "</div>" +
           '<div class="trip-leg__body">' +
           '<div class="trip-leg__top">' +
+          '<span class="trip-leg__title-row">' +
           "<strong>" +
           escapeHtml(legTitle(leg)) +
           "</strong>" +
           headsignHtml +
+          "</span>" +
           '<time class="trip-leg__time">' +
           escapeHtml(formatClock(leg.startTime)) +
           "–" +
@@ -350,16 +355,18 @@
           "</span>" +
           "</span>" +
           '<span class="trip-pattern__overview">' +
+          '<span class="trip-pattern__chips">' +
+          renderPatternRouteChips(pattern) +
+          "</span>" +
+          '<span class="trip-pattern__meta-row">' +
           "<strong>" +
           escapeHtml(formatDuration(pattern.duration)) +
           "</strong>" +
-          '<span class="trip-pattern__route">' +
-          escapeHtml(patternRouteSummary(pattern)) +
-          "</span>" +
           "<span>" +
           escapeHtml(changes) +
           " · " +
           escapeHtml(formatWalkDistance(pattern.walkDistance)) +
+          "</span>" +
           "</span>" +
           "</span>" +
           '<span class="trip-pattern__chevron" aria-hidden="true">›</span>' +
