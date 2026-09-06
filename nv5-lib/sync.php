@@ -22,6 +22,7 @@ const NV5_FORCE_SERVER_COOLDOWN = 120;
 function nv5_run(string $appId, string $appRoot): void
 {
     $siteRoot = dirname($appRoot);
+    $GLOBALS['nv5_site_root'] = $siteRoot;
     $stateDir = nv5_ensure_state_dir($siteRoot);
     nv5_migrate_and_scrub_webroot_state($appRoot, $stateDir);
 
@@ -46,61 +47,80 @@ function nv5_run(string $appId, string $appRoot): void
     }
 
     $paths = nv5_paths($siteRoot, $stateDir);
+    $adminSyncError = null;
 
     try {
-        if ($sync['server']) {
-            nv5_maybe_sync_server($paths, true);
-        } elseif (nv5_should_sync_server($paths)) {
-            nv5_maybe_sync_server($paths, false);
-        }
-
-        if ($sync['shared']) {
-            nv5_maybe_sync_shared($paths, true);
-        } elseif (nv5_should_sync_shared($paths)) {
-            nv5_maybe_sync_shared($paths, false);
-        }
-
-        if ($sync['admin']) {
-            nv5_maybe_sync_admin($paths, true);
-        } elseif ($appId === 'admin' && nv5_should_sync_admin($paths)) {
-            nv5_maybe_sync_admin($paths, false);
-        }
-
-        if ($sync['sis']) {
-            nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, true);
-        } elseif ($appId === 'sis' && nv5_should_sync_app('sis', $paths, $boardCheckInterval)) {
-            nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, false);
-        }
-
-        if ($sync['reise']) {
-            nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, true);
-        } elseif ($appId === 'reise' && nv5_should_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL)) {
-            nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, false);
-        }
-
         if ($appId === 'admin') {
+            try {
+                nv5_run_sync_jobs($appId, $paths, $sync, $boardCheckInterval);
+            } catch (Throwable $e) {
+                $adminSyncError = $e->getMessage();
+                nv5_log_sync_event($stateDir, 'admin_sync_error ' . $adminSyncError);
+            }
             nv5_render_admin($paths, [
                 'site_root' => $siteRoot,
                 'state_dir' => $stateDir,
                 'sync' => $sync,
                 'retry_after' => $gate['retry_after'],
+                'sync_error' => $adminSyncError,
             ]);
             return;
         }
 
+        nv5_run_sync_jobs($appId, $paths, $sync, $boardCheckInterval);
         nv5_render_app($appId, $paths);
     } catch (Throwable $e) {
-        $content = $paths['apps'][$appId]['content'];
-        if (is_file($content . '/index.html')) {
+        $content = $paths['apps'][$appId]['content'] ?? '';
+        if ($content !== '' && is_file($content . '/index.html')) {
             nv5_render_app($appId, $paths);
             return;
         }
         http_response_code(503);
         nv5_send_security_headers();
         header('Content-Type: text/html; charset=utf-8');
-        $title = $appId === 'reise' ? 'Reise' : 'SIS';
+        $title = match ($appId) {
+            'reise' => 'Reise',
+            'admin' => 'NV5 Admin',
+            default => 'SIS',
+        };
         echo '<!DOCTYPE html><html lang="nb"><meta charset="utf-8"><title>' . $title . '</title>';
         echo '<h1>Appen er ikke klar</h1><p>' . htmlspecialchars($e->getMessage(), ENT_QUOTES, 'UTF-8') . '</p>';
+    }
+}
+
+/**
+ * @param array{param:string,server:bool,shared:bool,admin:bool,sis:bool,reise:bool,all:bool} $sync
+ */
+function nv5_run_sync_jobs(string $appId, array $paths, array $sync, int $boardCheckInterval): void
+{
+    if ($sync['server']) {
+        nv5_maybe_sync_server($paths, true);
+    } elseif (nv5_should_sync_server($paths)) {
+        nv5_maybe_sync_server($paths, false);
+    }
+
+    if ($sync['shared']) {
+        nv5_maybe_sync_shared($paths, true);
+    } elseif (nv5_should_sync_shared($paths)) {
+        nv5_maybe_sync_shared($paths, false);
+    }
+
+    if ($sync['admin']) {
+        nv5_maybe_sync_admin($paths, true);
+    } elseif ($appId === 'admin' && nv5_should_sync_admin($paths)) {
+        nv5_maybe_sync_admin($paths, false);
+    }
+
+    if ($sync['sis']) {
+        nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, true);
+    } elseif ($appId === 'sis' && nv5_should_sync_app('sis', $paths, $boardCheckInterval)) {
+        nv5_maybe_sync_app('sis', $paths, $boardCheckInterval, false);
+    }
+
+    if ($sync['reise']) {
+        nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, true);
+    } elseif ($appId === 'reise' && nv5_should_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL)) {
+        nv5_maybe_sync_app('reise', $paths, NV5_REISE_CHECK_INTERVAL, false);
     }
 }
 
@@ -529,6 +549,7 @@ declare(strict_types=1);
 return [
     'NV5_ADMIN_USER' => 'admin',
     'NV5_ADMIN_PASSWORD' => '',
+    // 'NV5_GITHUB_TOKEN' => 'ghp_…',  // valgfri — unngår GitHub rate limit ved sync
 ];
 
 PHP;
@@ -680,7 +701,7 @@ function nv5_admin_sync_notice(string $siteRoot, string $stateDir, array $sync, 
     return implode(' ', $parts);
 }
 
-function nv5_build_admin_notice(string $siteRoot, string $stateDir, array $sync, int $retryAfter): string
+function nv5_build_admin_notice(string $siteRoot, string $stateDir, array $sync, int $retryAfter, ?string $syncError = null): string
 {
     $auth = nv5_admin_password_status($siteRoot, $stateDir);
     $lines = [];
@@ -692,8 +713,12 @@ function nv5_build_admin_notice(string $siteRoot, string $stateDir, array $sync,
             . htmlspecialchars($auth['hint'], ENT_QUOTES, 'UTF-8');
     }
 
+    if ($syncError !== null && $syncError !== '') {
+        $lines[] = '<strong>Sync-feil:</strong> ' . htmlspecialchars($syncError, ENT_QUOTES, 'UTF-8');
+    }
+
     $syncLine = nv5_admin_sync_notice($siteRoot, $stateDir, $sync, $retryAfter);
-    if ($syncLine !== '') {
+    if ($syncLine !== '' && $syncError === null) {
         $lines[] = $syncLine;
     }
 
@@ -873,6 +898,13 @@ function nv5_github_get(string $url): string
         'User-Agent: ' . NV5_UA,
         'X-GitHub-Api-Version: 2022-11-28',
     ];
+    $siteRoot = (string) ($GLOBALS['nv5_site_root'] ?? '');
+    if ($siteRoot !== '') {
+        $token = nv5_host_env($siteRoot, 'NV5_GITHUB_TOKEN');
+        if ($token !== '') {
+            $headers[] = 'Authorization: Bearer ' . $token;
+        }
+    }
     if (function_exists('curl_init')) {
         $ch = curl_init($url);
         curl_setopt_array($ch, [
@@ -890,6 +922,11 @@ function nv5_github_get(string $url): string
             throw new RuntimeException('cURL: ' . $error);
         }
         if ($status >= 400) {
+            if ($status === 403) {
+                throw new RuntimeException(
+                    'GitHub HTTP 403 (rate limit). Legg NV5_GITHUB_TOKEN i env/env-nv5/config.php, eller prøv igjen senere.'
+                );
+            }
             throw new RuntimeException('GitHub HTTP ' . $status);
         }
         return $body;
