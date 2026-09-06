@@ -366,16 +366,22 @@
     return quayPlatformLabel(name, quayCode, headsign) || name || "";
   }
 
-  function renderRouteTag(leg) {
+  function renderRouteBadge(leg) {
     var code = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
-    var dest = String(leg.lineDestination || "").trim();
     return (
-      '<span class="trip-route-tag">' +
       '<span class="trip-route-tag__badge"' +
       lineStyleAttr(leg) +
       ">" +
       escapeHtml(code) +
-      "</span>" +
+      "</span>"
+    );
+  }
+
+  function renderRouteTag(leg) {
+    var dest = String(leg.lineDestination || "").trim();
+    return (
+      '<span class="trip-route-tag">' +
+      renderRouteBadge(leg) +
       (dest
         ? '<span class="trip-route-tag__dest">' + escapeHtml(dest) + "</span>"
         : "") +
@@ -384,19 +390,33 @@
   }
 
   function renderPatternRoute(pattern) {
+    var transit = transitLegs(pattern);
     if (pattern.changes > 2) {
+      var first = transit[0];
+      var last = transit.length > 1 ? transit[transit.length - 1] : null;
+      var parts = [];
+      if (first) {
+        parts.push('<span class="trip-route-tag">' + renderRouteBadge(first) + "</span>");
+      }
+      parts.push(
+        '<span class="trip-card__route-compact">' +
+          escapeHtml(changesLabel(pattern.changes)) +
+          "</span>"
+      );
+      if (last && last !== first) {
+        parts.push('<span class="trip-route-tag">' + renderRouteBadge(last) + "</span>");
+      }
       return (
-        '<p class="trip-card__route-compact">' +
-        escapeHtml(changesLabel(pattern.changes)) +
-        "</p>"
+        '<div class="trip-card__route-tags trip-card__route-tags--compact">' +
+        parts.join('<span class="trip-route-sep" aria-hidden="true">→</span>') +
+        "</div>"
       );
     }
-    var legs = transitLegs(pattern);
-    if (!legs.length) {
+    if (!transit.length) {
       return "";
     }
     var tags = [];
-    legs.forEach(function (leg, index) {
+    transit.forEach(function (leg, index) {
       if (index > 0) {
         tags.push('<span class="trip-route-sep" aria-hidden="true">→</span>');
       }
@@ -466,7 +486,7 @@
     );
   }
 
-  function renderTimelineLeg(leg, isLast) {
+  function renderTimelineLeg(leg) {
     var isWalk = leg.mode === "foot";
     var markerClass =
       "trip-timeline__marker" +
@@ -503,7 +523,6 @@
       ">" +
       markerContent +
       "</span>" +
-      (isLast ? "" : '<span class="trip-timeline__line"></span>') +
       "</div>" +
       '<div class="trip-timeline__panel">' +
       '<div class="trip-timeline__header">' +
@@ -538,13 +557,15 @@
         var gap = legGapSeconds(pattern.legs, index);
         if (gap >= 60) {
           html.push(
-            '<li class="trip-timeline__gap"><span>' +
+            '<li class="trip-timeline__gap">' +
+              '<div class="trip-timeline__track" aria-hidden="true"></div>' +
+              '<span class="trip-timeline__gap-label">' +
               escapeHtml(formatDuration(gap) + " overgang") +
               "</span></li>"
           );
         }
       }
-      html.push(renderTimelineLeg(leg, index === pattern.legs.length - 1));
+      html.push(renderTimelineLeg(leg));
     });
     return html.join("");
   }
