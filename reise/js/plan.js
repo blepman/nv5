@@ -593,7 +593,7 @@
           renderMetaPills(pattern) +
           "</div>" +
           "</div>" +
-          '<span class="trip-card__chevron" aria-hidden="true"></span>' +
+          '<span class="trip-card__chevron" aria-hidden="true">›</span>' +
           "</button>" +
           (expanded
             ? '<div class="trip-card__details"><ol class="trip-timeline">' +
