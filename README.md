@@ -43,16 +43,16 @@ På prod ligger webroot og secrets side om side:
 ├── www/                 # webroot — admin/, sis/, reise/, shared/, …
 └── env/
     └── env-nv5/         # hemmeligheter (ikke HTTP-tilgjengelig)
-        ├── NV5_ADMIN_PASSWORD
-        ├── NV5_ADMIN_USER          # valgfri, standard admin
-        └── NV5_SYNC_SERVER_KEY     # valgfri, for ?sync=server
+        └── config.php     # anbefalt — se env-nv5.config.example.php i repo
 ```
 
-Én fil per variabel; innholdet er bare verdien (én linje, ingen `KEY=`).
+**Anbefalt:** én `config.php` med alle nøkler (mal: `env-nv5.config.example.php`).
 
-**Viktig:** Sync henter kode fra GitHub — den oppretter **ikke** passordfilen. Du må lage `NV5_ADMIN_PASSWORD` manuelt på serveren.
+Alternativt kan hver nøkkel ligge i egen fil (`NV5_ADMIN_PASSWORD`, `NV5_SYNC_SERVER_KEY`, …) med bare verdien på én linje.
 
-PHP leser i rekkefølge: `getenv()` → fil i `env/env-nv5/` → state-mappe (fallback).
+**Viktig:** Sync henter kode fra GitHub — den oppretter **ikke** `config.php`. Du må lage filen på serveren.
+
+PHP leser i rekkefølge: `getenv()` → `env/env-nv5/config.php` → enkeltfil i `env/env-nv5/` → state-mappe (fallback).
 
 ## State og sikkerhet
 
