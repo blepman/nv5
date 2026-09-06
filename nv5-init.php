@@ -4,7 +4,7 @@ declare(strict_types=1);
 /**
  * Engangs oppsett for nv5.haatetepe.no (haatetepe www/nv5-layout).
  *
- * 1. Last opp til nv5 site root (mappen som inneholder admin/, sis/, …).
+ * 1. Last opp til nv5 site root (www/nv5 — mappen kan være tom).
  * 2. Åpne https://nv5.haatetepe.no/nv5-init.php
  * 3. Fyll inn admin-bruker og passord — fila slettes automatisk ved suksess.
  */
@@ -148,11 +148,25 @@ function nv5_init_delete_self(): bool
     return @unlink($self);
 }
 
-if (!is_dir($siteRoot . '/sis') && !is_dir($siteRoot . '/admin')) {
+function nv5_init_writable_error(string $siteRoot): ?string
+{
+    if (is_writable($siteRoot)) {
+        return null;
+    }
+    $probe = $siteRoot . '/.nv5-init-write-test';
+    if (@file_put_contents($probe, 'ok') !== false) {
+        @unlink($probe);
+        return null;
+    }
+    return 'Mappen er ikke skrivbar: ' . $siteRoot;
+}
+
+$writableError = nv5_init_writable_error($siteRoot);
+if ($writableError !== null) {
     nv5_init_page(
-        'Feil mappe',
-        '<p class="err">Last opp <code>nv5-init.php</code> til <strong>nv5 site root</strong> '
-        . '(mappen som skal inneholde <code>admin/</code> og <code>sis/</code> etter oppsett).</p>',
+        'Kan ikke skrive her',
+        '<p class="err">' . htmlspecialchars($writableError, ENT_QUOTES, 'UTF-8') . '</p>'
+        . '<p>Last opp <code>nv5-init.php</code> til <strong>nv5 site root</strong> (<code>www/nv5/</code>), ikke inni <code>sis/</code> eller <code>admin/</code>.</p>',
         false
     );
     exit;
@@ -177,6 +191,7 @@ if (!$isPost) {
     nv5_init_page(
         'NV5 oppsett',
         '<p>Sett opp miljøet på nytt: henter kode fra GitHub, lager <code>env/env-nv5/</code> ved siden av <code>www/</code>, og konfigurerer admin-innlogging.</p>'
+        . '<p><small>Mappen kan være tom — <code>admin/</code>, <code>sis/</code> og resten opprettes under oppsettet.</small></p>'
         . '<form method="post" action="">'
         . '<label for="admin_user">Admin-bruker</label>'
         . '<input id="admin_user" name="admin_user" value="admin" autocomplete="username" required>'

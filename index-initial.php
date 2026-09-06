@@ -169,17 +169,6 @@ if (!$run) {
     exit;
 }
 
-if (!is_dir($siteRoot . '/sis')) {
-    nv5_initial_page(
-        'Feil mappe',
-        '<p class="err">Fant ikke <code>sis/</code> i <code>'
-        . htmlspecialchars($siteRoot, ENT_QUOTES, 'UTF-8')
-        . '</code>.</p><p>Last opp til site root — mappen <em>over</em> <code>sis/</code>, ikke inni <code>sis/content/</code>.</p>',
-        false
-    );
-    exit;
-}
-
 if (nv5_initial_already_complete($siteRoot) && !$force) {
     nv5_initial_page(
         'Allerede ferdig',

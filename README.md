@@ -4,7 +4,7 @@ PHP-sync for **admin**, **sis**, **reise** og **shared** på `nv5.haatetepe.no`.
 
 ## Engangs-oppsett (anbefalt)
 
-1. Last opp **`nv5-init.php`** fra denne branchen til **site root** (mappen som skal inneholde `admin/`, `sis/`, …).
+1. Last opp **`nv5-init.php`** fra denne branchen til **site root** (`www/nv5/` — mappen kan være tom).
 2. Åpne **`https://nv5.haatetepe.no/nv5-init.php`**
 3. Fyll inn **admin-bruker** og **passord** — scriptet henter server-skjelett + innhold fra GitHub og oppretter `env/env-nv5/`.
 4. Ved suksess **sletter `nv5-init.php` seg selv** fra serveren. Hvis `unlink` feiler (f.eks. filrettigheter), fjern fila manuelt.
