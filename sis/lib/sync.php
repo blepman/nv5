@@ -26,7 +26,7 @@ function nv5_run(string $appId, string $appRoot): void
     nv5_migrate_and_scrub_webroot_state($appRoot, $stateDir);
 
     if ($appId === 'admin') {
-        nv5_require_admin_auth($stateDir);
+        nv5_require_admin_auth($siteRoot, $stateDir);
     }
 
     $sync = nv5_parse_sync($appId);
@@ -37,7 +37,7 @@ function nv5_run(string $appId, string $appRoot): void
         $boardCheckInterval = nv5_normalize_board_interval((int) $_COOKIE['nv5_github_interval']);
     }
 
-    $gate = nv5_gate_forced_sync($stateDir, $sync, $syncKey);
+    $gate = nv5_gate_forced_sync($siteRoot, $stateDir, $sync, $syncKey);
     $sync = $gate['sync'];
     if ($gate['retry_after'] > 0) {
         header('Retry-After: ' . (string) $gate['retry_after']);
@@ -143,7 +143,7 @@ function nv5_parse_sync(string $appId): array
  * @param array{param:string,server:bool,shared:bool,admin:bool,sis:bool,reise:bool,all:bool} $sync
  * @return array{sync:array<string,bool>,retry_after:int}
  */
-function nv5_gate_forced_sync(string $stateDir, array $sync, string $providedKey): array
+function nv5_gate_forced_sync(string $siteRoot, string $stateDir, array $sync, string $providedKey): array
 {
     $retryAfter = 0;
     $out = $sync;
@@ -163,7 +163,7 @@ function nv5_gate_forced_sync(string $stateDir, array $sync, string $providedKey
             continue;
         }
         if ($cfg['secret']) {
-            $secret = nv5_sync_server_secret($stateDir);
+            $secret = nv5_sync_server_secret($siteRoot, $stateDir);
             if ($secret !== '' && ($providedKey === '' || !hash_equals($secret, $providedKey))) {
                 nv5_log_sync_event($stateDir, "deny kind={$kind} reason=bad_or_missing_key");
                 $out[$kind] = false;
@@ -339,11 +339,29 @@ function nv5_client_ip(): string
     return $ip !== '' ? $ip : 'unknown';
 }
 
-function nv5_sync_server_secret(string $stateDir): string
+function nv5_host_env_dir(string $siteRoot): string
 {
-    $fromEnv = trim((string) (getenv('NV5_SYNC_SERVER_KEY') ?: ''));
+    return dirname($siteRoot) . '/env/env-nv5';
+}
+
+function nv5_host_env(string $siteRoot, string $name): string
+{
+    $fromEnv = trim((string) (getenv($name) ?: ''));
     if ($fromEnv !== '') {
         return $fromEnv;
+    }
+    $file = nv5_host_env_dir($siteRoot) . '/' . $name;
+    if (is_readable($file)) {
+        return trim((string) file_get_contents($file));
+    }
+    return '';
+}
+
+function nv5_sync_server_secret(string $siteRoot, string $stateDir): string
+{
+    $secret = nv5_host_env($siteRoot, 'NV5_SYNC_SERVER_KEY');
+    if ($secret !== '') {
+        return $secret;
     }
     $file = $stateDir . '/sync-server-secret';
     if (is_readable($file)) {
@@ -355,13 +373,13 @@ function nv5_sync_server_secret(string $stateDir): string
 /**
  * @return array{user:string,pass:string}
  */
-function nv5_admin_credentials(string $stateDir): array
+function nv5_admin_credentials(string $siteRoot, string $stateDir): array
 {
-    $user = trim((string) (getenv('NV5_ADMIN_USER') ?: 'admin'));
+    $user = nv5_host_env($siteRoot, 'NV5_ADMIN_USER');
     if ($user === '') {
         $user = 'admin';
     }
-    $pass = trim((string) (getenv('NV5_ADMIN_PASSWORD') ?: ''));
+    $pass = nv5_host_env($siteRoot, 'NV5_ADMIN_PASSWORD');
     if ($pass === '') {
         $file = $stateDir . '/admin-password';
         if (is_readable($file)) {
@@ -390,9 +408,9 @@ function nv5_http_basic_credentials(): array
     return ['user' => $user, 'pass' => $pass];
 }
 
-function nv5_require_admin_auth(string $stateDir): void
+function nv5_require_admin_auth(string $siteRoot, string $stateDir): void
 {
-    $expected = nv5_admin_credentials($stateDir);
+    $expected = nv5_admin_credentials($siteRoot, $stateDir);
     if ($expected['pass'] === '') {
         return;
     }
