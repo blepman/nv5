@@ -572,6 +572,7 @@
           (expanded ? "true" : "false") +
           '">' +
           '<div class="trip-card__schedule">' +
+          '<div class="trip-card__times">' +
           '<time class="trip-card__dep" datetime="' +
           escapeHtml(pattern.startTime ? pattern.startTime.toISOString() : "") +
           '">' +
@@ -583,6 +584,7 @@
           '">' +
           escapeHtml(formatClock(pattern.endTime)) +
           "</time>" +
+          "</div>" +
           '<span class="trip-card__duration">' +
           escapeHtml(formatDuration(pattern.duration)) +
           "</span>" +
