@@ -61,6 +61,7 @@ PHP leser i rekkefølge: `getenv()` → `env/env-nv5/config.php` → enkeltfil i
 - `/admin/` krever HTTP Basic Auth når `NV5_ADMIN_PASSWORD` er satt (fil i `env/env-nv5/` eller env)
 - Alternativ uten env-mappe: skriv passordet til `admin-password` i state-mappen (utenfor webroot)
 - `?sync=server` kan kreve nøkkel (`NV5_SYNC_SERVER_KEY` i `env/env-nv5/` eller `sync-server-secret` i state)
+- Ved hyppig sync: legg `NV5_GITHUB_TOKEN` i `config.php` (GitHub rate limit uten token)
 - Rate limit per IP på tvungen sync
 - Audit: `sync-audit.log` i state-mappen
 - `index-initial.php` speiles **ikke** til webroot ved vanlig server-sync — slett etter bruk
