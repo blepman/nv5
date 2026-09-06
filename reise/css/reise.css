@@ -78,7 +78,9 @@
   font-weight: 600;
 }
 
-.reise__field input[type="search"] {
+.reise__field input[type="search"],
+.reise__field input[type="date"],
+.reise__field input[type="time"] {
   font: inherit;
   padding: 0.7rem 0.75rem;
   border-radius: 0.35rem;
@@ -86,6 +88,47 @@
   background: #0b1220;
   color: var(--text);
   width: 100%;
+}
+
+.reise__when {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.reise__when-btn {
+  appearance: none;
+  border: 1px solid var(--line);
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--muted);
+  font: inherit;
+  font-size: 0.9rem;
+  font-weight: 600;
+  padding: 0.6rem 0.75rem;
+  border-radius: 0.35rem;
+  cursor: pointer;
+}
+
+.reise__when-btn.is-active {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  background: color-mix(in srgb, var(--accent) 18%, var(--bg));
+  color: var(--text);
+}
+
+.reise__when-btn:hover,
+.reise__when-btn:focus-visible {
+  border-color: color-mix(in srgb, var(--accent) 45%, var(--line));
+  color: var(--text);
+}
+
+.reise__datetime {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 0.45rem;
+}
+
+.reise__datetime[hidden] {
+  display: none;
 }
 
 .reise__swap {

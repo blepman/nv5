@@ -21,6 +21,11 @@
     tripStatus: document.getElementById("tripStatus"),
     tripResults: document.getElementById("tripResults"),
     swapStops: document.getElementById("swapStops"),
+    tripSubmit: document.getElementById("tripSubmit"),
+    tripDateTimeWrap: document.getElementById("tripDateTimeWrap"),
+    tripDate: document.getElementById("tripDate"),
+    tripTime: document.getElementById("tripTime"),
+    whenButtons: document.querySelectorAll(".reise__when-btn"),
   };
 
   var state = {
@@ -29,6 +34,7 @@
     patterns: [],
     expandedIndex: -1,
     searchTimers: {},
+    when: "now",
   };
 
   function loadSettings() {
@@ -50,11 +56,102 @@
         JSON.stringify({
           from: state.from,
           to: state.to,
+          when: state.when,
+          departDate: els.tripDate ? els.tripDate.value : "",
+          departTime: els.tripTime ? els.tripTime.value : "",
         })
       );
     } catch (error) {
       console.warn("Kunne ikke lagre innstillinger", error);
     }
+  }
+
+  function pad2(value) {
+    return String(value).padStart(2, "0");
+  }
+
+  function formatDateInputValue(date) {
+    return (
+      date.getFullYear() +
+      "-" +
+      pad2(date.getMonth() + 1) +
+      "-" +
+      pad2(date.getDate())
+    );
+  }
+
+  function formatTimeInputValue(date) {
+    return pad2(date.getHours()) + ":" + pad2(date.getMinutes());
+  }
+
+  function defaultDepartDateTime() {
+    var d = new Date();
+    d.setSeconds(0, 0);
+    var mins = d.getMinutes();
+    var rounded = Math.ceil(mins / 5) * 5;
+    if (rounded >= 60) {
+      d.setHours(d.getHours() + 1);
+      d.setMinutes(0);
+    } else {
+      d.setMinutes(rounded);
+    }
+    return d;
+  }
+
+  function setDepartInputs(date) {
+    if (!els.tripDate || !els.tripTime) {
+      return;
+    }
+    els.tripDate.value = formatDateInputValue(date);
+    els.tripTime.value = formatTimeInputValue(date);
+  }
+
+  function updateWhenUi() {
+    var isDepart = state.when === "depart";
+    if (els.tripDateTimeWrap) {
+      els.tripDateTimeWrap.hidden = !isDepart;
+    }
+    if (els.whenButtons) {
+      els.whenButtons.forEach(function (btn) {
+        var active = btn.getAttribute("data-when") === state.when;
+        btn.classList.toggle("is-active", active);
+        btn.setAttribute("aria-pressed", active ? "true" : "false");
+      });
+    }
+    if (els.tripSubmit) {
+      els.tripSubmit.textContent = isDepart ? "Søk reise" : "Reis nå";
+    }
+  }
+
+  function setWhen(mode) {
+    state.when = mode === "depart" ? "depart" : "now";
+    if (state.when === "depart") {
+      if (els.tripDate && !els.tripDate.value) {
+        setDepartInputs(defaultDepartDateTime());
+      }
+    }
+    updateWhenUi();
+    saveSettings();
+  }
+
+  function getDepartureDateTime() {
+    if (state.when !== "depart") {
+      return new Date();
+    }
+    if (!els.tripDate || !els.tripTime) {
+      return new Date();
+    }
+    var datePart = els.tripDate.value;
+    var timePart = els.tripTime.value;
+    if (!datePart || !timePart) {
+      return null;
+    }
+    var parts = datePart.split("-").map(Number);
+    var timeParts = timePart.split(":").map(Number);
+    if (parts.length < 3 || timeParts.length < 2) {
+      return null;
+    }
+    return new Date(parts[0], parts[1] - 1, parts[2], timeParts[0], timeParts[1], 0, 0);
   }
 
   function modeLabel(mode) {
@@ -397,6 +494,15 @@
       return;
     }
 
+    var departAt = getDepartureDateTime();
+    if (departAt === null) {
+      setStatus("Velg dato og tidspunkt", true);
+      if (els.tripDate) {
+        els.tripDate.focus();
+      }
+      return;
+    }
+
     setStatus("Søker reiser…", false);
     state.patterns = [];
     state.expandedIndex = -1;
@@ -407,7 +513,7 @@
         config,
         state.from,
         state.to,
-        new Date()
+        departAt
       );
       if (!patterns.length) {
         setStatus("Ingen reiseforslag funnet", true);
@@ -470,6 +576,16 @@
     var saved = loadSettings();
     state.from = saved.from || config.defaultFrom || null;
     state.to = saved.to || null;
+    state.when = saved.when === "depart" ? "depart" : "now";
+    if (state.when === "depart" && saved.departDate && saved.departTime) {
+      if (els.tripDate) {
+        els.tripDate.value = saved.departDate;
+      }
+      if (els.tripTime) {
+        els.tripTime.value = saved.departTime;
+      }
+    }
+    updateWhenUi();
     if (state.from && els.fromSearch) {
       els.fromSearch.value = state.from.name || "";
     }
@@ -504,6 +620,21 @@
         hideAllResultLists();
         saveSettings();
       });
+    }
+
+    if (els.whenButtons && els.whenButtons.length) {
+      els.whenButtons.forEach(function (btn) {
+        btn.addEventListener("click", function () {
+          setWhen(btn.getAttribute("data-when"));
+        });
+      });
+    }
+
+    if (els.tripDate) {
+      els.tripDate.addEventListener("change", saveSettings);
+    }
+    if (els.tripTime) {
+      els.tripTime.addEventListener("change", saveSettings);
     }
 
     if (els.tripResults) {
