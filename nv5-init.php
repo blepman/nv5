@@ -178,7 +178,7 @@ if (is_file($lib)) {
     if (!$force && function_exists('nv5_admin_env_configured') && nv5_admin_env_configured($siteRoot)) {
         nv5_init_page(
             'Allerede konfigurert',
-            '<p class="ok">Admin-passord er allerede satt i <code>env/env-nv5/admin/config.php</code>.</p>'
+            '<p class="ok">Admin-passord er allerede satt i <code>env/env-nv5/config.php</code>.</p>'
             . '<p><a href="/admin/">Gå til admin</a></p>'
             . '<p>For nytt oppsett: slett miljøfiler manuelt og last opp <code>nv5-init.php</code> på nytt med <code>?force=1</code>.</p>'
             . '<p><small>Denne fila bør ikke ligge i site root etter oppsett — slett den hvis den fortsatt finnes.</small></p>'
@@ -199,7 +199,7 @@ if (!$isPost) {
         . '<input id="admin_password" name="admin_password" type="password" autocomplete="new-password" minlength="8" required>'
         . '<label for="admin_password_confirm">Bekreft passord</label>'
         . '<input id="admin_password_confirm" name="admin_password_confirm" type="password" autocomplete="new-password" minlength="8" required>'
-        . '<p><small>Passord lagres i <code>env/env-nv5/admin/config.php</code> (utenfor webroot).</small></p>'
+        . '<p><small>Passord lagres i <code>env/env-nv5/config.php</code> (utenfor webroot).</small></p>'
         . '<button class="btn" type="submit">Start oppsett</button>'
         . '</form>'
     );
@@ -251,15 +251,12 @@ try {
     }
 
     nv5_migrate_host_env_from_webroot($siteRoot);
-    nv5_write_app_env_config($siteRoot, 'admin', [
+    nv5_ensure_host_config($siteRoot);
+    nv5_write_host_env_config($siteRoot, [
         'NV5_ADMIN_USER' => $user,
         'NV5_ADMIN_PASSWORD' => $pass,
     ]);
-    $envRoot = nv5_host_env_dir($siteRoot);
-    if (!is_file($envRoot . '/config.php')) {
-        nv5_ensure_host_config($siteRoot);
-    }
-    $log[] = '  ✓ env/env-nv5/admin/config.php';
+    $log[] = '  ✓ env/env-nv5/config.php';
 
     $log[] = 'Synker innhold fra main…';
     foreach (nv5_bootstrap_install($siteRoot)['steps'] as $step) {
