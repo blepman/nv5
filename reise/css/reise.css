@@ -202,10 +202,10 @@
 .trip-pattern__summary {
   appearance: none;
   width: 100%;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto 1fr auto;
   align-items: center;
-  justify-content: space-between;
-  gap: 0.75rem;
+  gap: 0.65rem 0.75rem;
   padding: 0.85rem 0.9rem;
   border: none;
   background: transparent;
@@ -213,6 +213,40 @@
   font: inherit;
   text-align: left;
   cursor: pointer;
+}
+
+.trip-pattern__overview {
+  display: flex;
+  flex-direction: column;
+  gap: 0.2rem;
+  min-width: 0;
+}
+
+.trip-pattern__overview strong {
+  font-size: 0.95rem;
+}
+
+.trip-pattern__route {
+  font-size: 0.84rem;
+  color: var(--text);
+  line-height: 1.35;
+}
+
+.trip-pattern__overview > span:last-child {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.trip-pattern__chevron {
+  font-size: 1.35rem;
+  line-height: 1;
+  color: var(--muted);
+  transition: transform 0.15s ease;
+}
+
+.trip-pattern.is-open .trip-pattern__chevron {
+  transform: rotate(90deg);
+  color: var(--accent);
 }
 
 .trip-pattern__times {
@@ -230,23 +264,6 @@
 
 .trip-pattern__arr {
   font-size: 0.95rem;
-  color: var(--muted);
-}
-
-.trip-pattern__meta {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  gap: 0.15rem;
-  text-align: right;
-}
-
-.trip-pattern__meta strong {
-  font-size: 0.95rem;
-}
-
-.trip-pattern__meta span {
-  font-size: 0.8rem;
   color: var(--muted);
 }
 
@@ -370,6 +387,13 @@
 .reise__sync:hover {
   border-color: var(--accent);
   color: var(--accent);
+}
+
+.reise__version {
+  margin-left: auto;
+  font-size: 0.75rem;
+  color: var(--muted);
+  font-family: var(--mono);
 }
 
 @media (min-width: 480px) {

@@ -195,20 +195,31 @@
     return leg.lineDestination;
   }
 
-  function stopAbbrev(name) {
-    var compact = String(name || "").replace(/\s+/g, "").trim();
-    if (!compact) {
-      return "";
-    }
-    return compact.slice(0, 3).toLocaleUpperCase("nb-NO");
-  }
-
   function quayPlatformLabel(placeName, quayCode) {
     if (!quayCode) {
       return "";
     }
-    var abbr = stopAbbrev(placeName);
-    return abbr ? abbr + quayCode : "Plattform " + quayCode;
+    return (placeName || "Holdeplass") + " " + quayCode;
+  }
+
+  function patternRouteSummary(pattern) {
+    var parts = [];
+    (pattern.legs || []).forEach(function (leg) {
+      if (leg.mode === "foot") {
+        if (leg.fromName && leg.fromName === leg.toName) {
+          parts.push("bytte " + leg.fromName);
+        } else {
+          parts.push("gå");
+        }
+        return;
+      }
+      if (leg.lineCode) {
+        parts.push("Linje " + leg.lineCode);
+      } else {
+        parts.push(modeLabel(leg.transportMode || leg.mode));
+      }
+    });
+    return parts.join(" → ");
   }
 
   function legRoute(leg) {
@@ -338,16 +349,20 @@
           escapeHtml(formatClock(pattern.endTime)) +
           "</span>" +
           "</span>" +
-          '<span class="trip-pattern__meta">' +
+          '<span class="trip-pattern__overview">' +
           "<strong>" +
           escapeHtml(formatDuration(pattern.duration)) +
           "</strong>" +
+          '<span class="trip-pattern__route">' +
+          escapeHtml(patternRouteSummary(pattern)) +
+          "</span>" +
           "<span>" +
           escapeHtml(changes) +
           " · " +
           escapeHtml(formatWalkDistance(pattern.walkDistance)) +
           "</span>" +
           "</span>" +
+          '<span class="trip-pattern__chevron" aria-hidden="true">›</span>' +
           "</button>" +
           (expanded
             ? '<ol class="trip-legs">' + renderLegs(pattern) + "</ol>"
@@ -392,7 +407,7 @@
         return;
       }
       state.patterns = patterns;
-      state.expandedIndex = 0;
+      state.expandedIndex = -1;
       setStatus("");
       renderPatterns();
       saveSettings();
