@@ -153,6 +153,8 @@ Docs:
 
 Fra `js/entur.js`: avganger, realtime, delay, situasjoner, occupancy (ofte `noData` på T-bane), journey progress (previous/first calls), linjefarger, tjenestekjøring-heuristikk. **Ikke** `privateCode`.
 
+**Oslo linjekart-farger** (i `shared/js/entur.js`, `linePresentationColours`): T-bane 1–5, trikk 11/12/13/17/18/19 og tog-prefiks L/R/RE/F/FLY har hardkodede hex-farger; buss/coach beholder Entur `presentation.colour`. Reise viser `occupancyStatus` fra `fromEstimatedCall` på etapper når ikke `noData`.
+
 ---
 
 ## 6. Tognr / vognløp (eget spor)
