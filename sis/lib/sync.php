@@ -421,12 +421,14 @@ function nv5_host_env(string $siteRoot, string $name): string
 function nv5_ensure_host_config(string $siteRoot): void
 {
     $dir = nv5_host_env_dir($siteRoot);
-    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
+    if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
         return;
     }
+    @chmod($dir, 0755);
 
     $path = $dir . '/config.php';
     if (is_file($path)) {
+        @chmod($path, 0644);
         return;
     }
 
@@ -443,7 +445,7 @@ PHP;
 
     try {
         nv5_write_atomic($path, $template);
-        @chmod($path, 0600);
+        @chmod($path, 0644);
     } catch (Throwable $e) {
     }
 }
@@ -507,7 +509,9 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         return [
             'active' => false,
             'source' => '',
-            'hint' => 'Rediger env/env-nv5/config.php og sett NV5_ADMIN_PASSWORD.',
+            'hint' => 'config.php finnes — sett NV5_ADMIN_PASSWORD. '
+                . 'Mappen er env/env-nv5 ved siden av www (ikke inni www). '
+                . 'Oppdater filbehandleren hvis mappen ser tom ut.',
         ];
     }
 
