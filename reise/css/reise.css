@@ -320,17 +320,28 @@
 .trip-summary-chip--walk {
   min-width: auto;
   padding: 0 0.35rem;
-  font-size: 0.64rem;
+  font-size: 0.62rem;
   font-weight: 600;
   color: var(--muted);
+  white-space: nowrap;
 }
 
 .trip-summary-arrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.08rem;
   color: var(--muted);
   font-size: 0.72rem;
   line-height: 1;
   flex-shrink: 0;
   padding: 0 0.05rem;
+}
+
+.trip-summary-wait {
+  font-size: 0.62rem;
+  font-weight: 600;
+  color: var(--muted);
+  white-space: nowrap;
 }
 
 .trip-pattern__meta-row {

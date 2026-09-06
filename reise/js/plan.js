@@ -188,6 +188,63 @@
     return (m / 1000).toFixed(1).replace(".", ",") + " km gange";
   }
 
+  function legGapSeconds(legs, index) {
+    if (!legs || index <= 0) {
+      return 0;
+    }
+    var previous = legs[index - 1];
+    var current = legs[index];
+    if (!previous.endTime || !current.startTime) {
+      return 0;
+    }
+    return Math.max(
+      0,
+      Math.round((current.startTime.getTime() - previous.endTime.getTime()) / 1000)
+    );
+  }
+
+  function formatPatternMeta(pattern) {
+    var parts = [];
+    if (pattern.changes === 0) {
+      parts.push("Ingen bytter");
+    } else if (pattern.changes === 1) {
+      parts.push("1 bytte");
+    } else {
+      parts.push(pattern.changes + " bytter");
+    }
+    if (pattern.walkDuration >= 60) {
+      parts.push(formatDuration(pattern.walkDuration) + " gange");
+    } else if (pattern.walkDistance > 0) {
+      parts.push(formatWalkDistance(pattern.walkDistance));
+    }
+    if (pattern.transferDuration >= 60) {
+      parts.push(formatDuration(pattern.transferDuration) + " overgang");
+    }
+    return parts.join(" · ");
+  }
+
+  function walkChipLabel(leg) {
+    if (leg.duration >= 60) {
+      return "Gå " + formatDuration(leg.duration);
+    }
+    return "Gå";
+  }
+
+  function renderSummaryArrow(gapSeconds) {
+    if (gapSeconds >= 60) {
+      return (
+        '<span class="trip-summary-arrow" aria-hidden="true">' +
+        "→" +
+        '<span class="trip-summary-wait">' +
+        escapeHtml(formatDuration(gapSeconds)) +
+        "</span>" +
+        "→" +
+        "</span>"
+      );
+    }
+    return '<span class="trip-summary-arrow" aria-hidden="true">→</span>';
+  }
+
   function setStatus(message, isError) {
     if (!els.tripStatus) {
       return;
@@ -277,6 +334,9 @@
 
   function legTitle(leg) {
     if (leg.mode === "foot") {
+      if (leg.duration >= 60) {
+        return "Gå · " + formatDuration(leg.duration);
+      }
       return "Gå";
     }
     if (leg.lineCode) {
@@ -312,7 +372,9 @@
     if (leg.mode === "foot") {
       return (
         '<span class="trip-summary-leg trip-summary-leg--walk">' +
-        '<span class="trip-summary-chip trip-summary-chip--walk">Gå</span>' +
+        '<span class="trip-summary-chip trip-summary-chip--walk">' +
+        escapeHtml(walkChipLabel(leg)) +
+        "</span>" +
         "</span>"
       );
     }
@@ -337,7 +399,7 @@
     var chips = [];
     (pattern.legs || []).forEach(function (leg, index) {
       if (index > 0) {
-        chips.push('<span class="trip-summary-arrow" aria-hidden="true">→</span>');
+        chips.push(renderSummaryArrow(legGapSeconds(pattern.legs, index)));
       }
       chips.push(renderSummaryChip(leg));
     });
@@ -463,12 +525,6 @@
     els.tripResults.innerHTML = state.patterns
       .map(function (pattern, index) {
         var expanded = state.expandedIndex === index;
-        var changes =
-          pattern.changes === 0
-            ? "Ingen bytter"
-            : pattern.changes === 1
-              ? "1 bytte"
-              : pattern.changes + " bytter";
         return (
           '<article class="trip-pattern' +
           (expanded ? " is-open" : "") +
@@ -495,9 +551,7 @@
           "</span>" +
           '<span class="trip-pattern__meta-row">' +
           "<span>" +
-          escapeHtml(changes) +
-          " · " +
-          escapeHtml(formatWalkDistance(pattern.walkDistance)) +
+          escapeHtml(formatPatternMeta(pattern)) +
           "</span>" +
           "</span>" +
           "</span>" +
