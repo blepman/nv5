@@ -159,15 +159,15 @@ Alt under er **must-have** før v1 regnes som ferdig:
 
 ### Fase 1 — Mini-planlegger (v1)
 
-| # | Oppgave |
-|---|---------|
-| 1.1 | `shared/js/entur.js`: `planTrip(from, to, dateTime)` |
-| 1.2 | `reise/js/plan.js`: søk fra/til, «Reis nå», resultatliste |
-| 1.3 | `reise/js/plan.js`: etappvisning med linjefarger og situasjoner |
-| 1.4 | `reise/css/reise.css`: eget layout, delte tokens |
-| 1.5 | `reise/index.html` + `config.js` + `manifest.webmanifest` |
-| 1.6 | Lenker SIS ↔ Reise i meny/footer |
-| 1.7 | Test på alle plattformer (se §2) |
+| # | Oppgave | Status |
+|---|---------|--------|
+| 1.1 | `shared/js/entur.js`: `planTrip(from, to, dateTime)` | ✅ |
+| 1.2 | `reise/js/plan.js`: søk fra/til, «Reis nå», resultatliste | ✅ |
+| 1.3 | `reise/js/plan.js`: etappvisning med linjefarger og situasjoner | ✅ |
+| 1.4 | `reise/css/reise.css`: eget layout, delte tokens | ✅ |
+| 1.5 | `reise/index.html` + `config.js` + `manifest.webmanifest` | ✅ |
+| 1.6 | Lenker SIS ↔ Reise i meny/footer | ✅ |
+| 1.7 | Live på `/reise/` | 🔲 krever server/nginx (se `deploy/reise/SETUP.md`) |
 
 **Exit:** v1 Definition of Done (§5) er oppfylt.
 
