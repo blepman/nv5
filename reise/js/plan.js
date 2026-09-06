@@ -213,7 +213,7 @@
     return changes + " bytter";
   }
 
-  function formatPatternMeta(pattern) {
+  function patternMetaParts(pattern) {
     var parts = [];
     if (pattern.changes <= 2) {
       parts.push(changesLabel(pattern.changes));
@@ -226,29 +226,21 @@
     if (pattern.transferDuration >= 60) {
       parts.push(formatDuration(pattern.transferDuration) + " overgang");
     }
-    return parts.join(" · ");
+    return parts;
   }
 
-  function walkChipLabel(leg) {
-    if (leg.duration >= 60) {
-      return "Gå " + formatDuration(leg.duration);
-    }
-    return "Gå";
+  function renderMetaPills(pattern) {
+    return patternMetaParts(pattern)
+      .map(function (text) {
+        return '<span class="trip-meta-pill">' + escapeHtml(text) + "</span>";
+      })
+      .join("");
   }
 
-  function renderSummaryArrow(gapSeconds) {
-    if (gapSeconds >= 60) {
-      return (
-        '<span class="trip-summary-arrow" aria-hidden="true">' +
-        "→" +
-        '<span class="trip-summary-wait">' +
-        escapeHtml(formatDuration(gapSeconds)) +
-        "</span>" +
-        "→" +
-        "</span>"
-      );
-    }
-    return '<span class="trip-summary-arrow" aria-hidden="true">→</span>';
+  function transitLegs(pattern) {
+    return (pattern.legs || []).filter(function (leg) {
+      return leg.mode !== "foot";
+    });
   }
 
   function setStatus(message, isError) {
@@ -374,49 +366,43 @@
     return quayPlatformLabel(name, quayCode, headsign) || name || "";
   }
 
-  function renderSummaryChip(leg) {
-    if (leg.mode === "foot") {
-      return (
-        '<span class="trip-summary-leg trip-summary-leg--walk">' +
-        '<span class="trip-summary-chip trip-summary-chip--walk">' +
-        escapeHtml(walkChipLabel(leg)) +
-        "</span>" +
-        "</span>"
-      );
-    }
+  function renderRouteTag(leg) {
     var code = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
     var dest = String(leg.lineDestination || "").trim();
-    var destHtml = dest
-      ? '<span class="trip-summary-chip__dest">' + escapeHtml(dest) + "</span>"
-      : "";
     return (
-      '<span class="trip-summary-leg">' +
-      '<span class="trip-summary-chip"' +
+      '<span class="trip-route-tag">' +
+      '<span class="trip-route-tag__badge"' +
       lineStyleAttr(leg) +
       ">" +
       escapeHtml(code) +
       "</span>" +
-      destHtml +
+      (dest
+        ? '<span class="trip-route-tag__dest">' + escapeHtml(dest) + "</span>"
+        : "") +
       "</span>"
     );
   }
 
-  function renderPatternRouteChips(pattern) {
+  function renderPatternRoute(pattern) {
     if (pattern.changes > 2) {
       return (
-        '<span class="trip-summary-compact">' +
+        '<p class="trip-card__route-compact">' +
         escapeHtml(changesLabel(pattern.changes)) +
-        "</span>"
+        "</p>"
       );
     }
-    var chips = [];
-    (pattern.legs || []).forEach(function (leg, index) {
+    var legs = transitLegs(pattern);
+    if (!legs.length) {
+      return "";
+    }
+    var tags = [];
+    legs.forEach(function (leg, index) {
       if (index > 0) {
-        chips.push(renderSummaryArrow(legGapSeconds(pattern.legs, index)));
+        tags.push('<span class="trip-route-sep" aria-hidden="true">→</span>');
       }
-      chips.push(renderSummaryChip(leg));
+      tags.push(renderRouteTag(leg));
     });
-    return chips.join("");
+    return '<div class="trip-card__route-tags">' + tags.join("") + "</div>";
   }
 
   function legRoute(leg) {
@@ -461,7 +447,7 @@
   function legBadgeClass(leg) {
     var text = String(legBadgeText(leg) || "");
     if (text.length > 3) {
-      return " trip-leg__badge--compact";
+      return " trip-timeline__marker--compact";
     }
     return "";
   }
@@ -480,65 +466,87 @@
     );
   }
 
+  function renderTimelineLeg(leg, isLast) {
+    var isWalk = leg.mode === "foot";
+    var markerClass =
+      "trip-timeline__marker" +
+      (isWalk ? " trip-timeline__marker--walk" : "") +
+      legBadgeClass(leg);
+    var markerContent = isWalk
+      ? "Gå"
+      : escapeHtml(legBadgeText(leg));
+    var markerStyle = isWalk ? "" : lineStyleAttr(leg);
+    var headsign = legHeadsign(leg);
+    var headsignHtml = headsign
+      ? '<span class="trip-timeline__headsign">' + escapeHtml(headsign) + "</span>"
+      : "";
+    var situations = leg.situations.length
+      ? '<p class="trip-timeline__situation">' +
+        escapeHtml(leg.situations.join(" ")) +
+        "</p>"
+      : "";
+    var occupancy =
+      !isWalk && leg.occupancyLabel
+        ? '<p class="trip-timeline__occupancy">' +
+          escapeHtml(leg.occupancyLabel) +
+          "</p>"
+        : "";
+    return (
+      '<li class="trip-timeline__item' +
+      (isWalk ? " trip-timeline__item--walk" : "") +
+      '">' +
+      '<div class="trip-timeline__track" aria-hidden="true">' +
+      '<span class="' +
+      markerClass +
+      '"' +
+      markerStyle +
+      ">" +
+      markerContent +
+      "</span>" +
+      (isLast ? "" : '<span class="trip-timeline__line"></span>') +
+      "</div>" +
+      '<div class="trip-timeline__panel">' +
+      '<div class="trip-timeline__header">' +
+      '<div class="trip-timeline__title">' +
+      "<strong>" +
+      escapeHtml(legTitle(leg)) +
+      "</strong>" +
+      headsignHtml +
+      '<span class="trip-timeline__mode">' +
+      escapeHtml(legModeUnderBadge(leg)) +
+      "</span>" +
+      "</div>" +
+      '<time class="trip-timeline__time">' +
+      escapeHtml(formatClock(leg.startTime)) +
+      "–" +
+      escapeHtml(formatClock(leg.endTime)) +
+      "</time>" +
+      "</div>" +
+      '<p class="trip-timeline__route">' +
+      escapeHtml(legRoute(leg)) +
+      "</p>" +
+      occupancy +
+      situations +
+      "</div></li>"
+    );
+  }
+
   function renderLegs(pattern) {
-    return pattern.legs
-      .map(function (leg) {
-        var badge =
-          leg.mode === "foot"
-            ? '<span class="trip-leg__badge trip-leg__badge--walk">Gå</span>'
-            : '<span class="trip-leg__badge' +
-              legBadgeClass(leg) +
-              '"' +
-              lineStyleAttr(leg) +
-              ">" +
-              escapeHtml(legBadgeText(leg)) +
-              "</span>";
-        var headsign = legHeadsign(leg);
-        var headsignHtml = headsign
-          ? '<span class="trip-leg__headsign">' + escapeHtml(headsign) + "</span>"
-          : "";
-        var situations = leg.situations.length
-          ? '<p class="trip-leg__situation">' +
-            escapeHtml(leg.situations.join(" ")) +
-            "</p>"
-          : "";
-        var occupancy =
-          leg.mode !== "foot" && leg.occupancyLabel
-            ? '<p class="trip-leg__occupancy">' +
-              escapeHtml(leg.occupancyLabel) +
-              "</p>"
-            : "";
-        return (
-          '<li class="trip-leg">' +
-          '<div class="trip-leg__aside">' +
-          badge +
-          '<span class="trip-leg__mode">' +
-          escapeHtml(legModeUnderBadge(leg)) +
-          "</span>" +
-          "</div>" +
-          '<div class="trip-leg__body">' +
-          '<div class="trip-leg__top">' +
-          '<span class="trip-leg__title-row">' +
-          "<strong>" +
-          escapeHtml(legTitle(leg)) +
-          "</strong>" +
-          headsignHtml +
-          "</span>" +
-          '<time class="trip-leg__time">' +
-          escapeHtml(formatClock(leg.startTime)) +
-          "–" +
-          escapeHtml(formatClock(leg.endTime)) +
-          "</time>" +
-          "</div>" +
-          '<p class="trip-leg__route">' +
-          escapeHtml(legRoute(leg)) +
-          "</p>" +
-          occupancy +
-          situations +
-          "</div></li>"
-        );
-      })
-      .join("");
+    var html = [];
+    (pattern.legs || []).forEach(function (leg, index) {
+      if (index > 0) {
+        var gap = legGapSeconds(pattern.legs, index);
+        if (gap >= 60) {
+          html.push(
+            '<li class="trip-timeline__gap"><span>' +
+              escapeHtml(formatDuration(gap) + " overgang") +
+              "</span></li>"
+          );
+        }
+      }
+      html.push(renderTimelineLeg(leg, index === pattern.legs.length - 1));
+    });
+    return html.join("");
   }
 
   function renderPatterns() {
@@ -553,39 +561,42 @@
       .map(function (pattern, index) {
         var expanded = state.expandedIndex === index;
         return (
-          '<article class="trip-pattern' +
+          '<article class="trip-card' +
           (expanded ? " is-open" : "") +
           '">' +
-          '<button type="button" class="trip-pattern__summary" data-pattern="' +
+          '<button type="button" class="trip-card__header" data-pattern="' +
           index +
           '" aria-expanded="' +
           (expanded ? "true" : "false") +
           '">' +
-          '<span class="trip-pattern__times">' +
-          '<span class="trip-pattern__dep">' +
+          '<div class="trip-card__schedule">' +
+          '<time class="trip-card__dep" datetime="' +
+          escapeHtml(pattern.startTime ? pattern.startTime.toISOString() : "") +
+          '">' +
           escapeHtml(formatClock(pattern.startTime)) +
-          "</span>" +
-          '<span class="trip-pattern__arr">' +
+          "</time>" +
+          '<span class="trip-card__schedule-bar" aria-hidden="true"></span>' +
+          '<time class="trip-card__arr" datetime="' +
+          escapeHtml(pattern.endTime ? pattern.endTime.toISOString() : "") +
+          '">' +
           escapeHtml(formatClock(pattern.endTime)) +
-          "</span>" +
-          '<span class="trip-pattern__duration">' +
+          "</time>" +
+          '<span class="trip-card__duration">' +
           escapeHtml(formatDuration(pattern.duration)) +
           "</span>" +
-          "</span>" +
-          '<span class="trip-pattern__overview">' +
-          '<span class="trip-pattern__chips">' +
-          renderPatternRouteChips(pattern) +
-          "</span>" +
-          '<span class="trip-pattern__meta-row">' +
-          "<span>" +
-          escapeHtml(formatPatternMeta(pattern)) +
-          "</span>" +
-          "</span>" +
-          "</span>" +
-          '<span class="trip-pattern__chevron" aria-hidden="true">›</span>' +
+          "</div>" +
+          '<div class="trip-card__main">' +
+          renderPatternRoute(pattern) +
+          '<div class="trip-card__meta">' +
+          renderMetaPills(pattern) +
+          "</div>" +
+          "</div>" +
+          '<span class="trip-card__chevron" aria-hidden="true"></span>' +
           "</button>" +
           (expanded
-            ? '<ol class="trip-legs">' + renderLegs(pattern) + "</ol>"
+            ? '<div class="trip-card__details"><ol class="trip-timeline">' +
+              renderLegs(pattern) +
+              "</ol></div>"
             : "") +
           "</article>"
         );
@@ -702,6 +713,9 @@
       }
     }
     updateWhenUi();
+    if (els.tripDate) {
+      els.tripDate.min = formatDateInputValue(new Date());
+    }
     if (state.from && els.fromSearch) {
       els.fromSearch.value = state.from.name || "";
     }
