@@ -1,17 +1,17 @@
 # NV5 Reise — engangs-oppsett på host
 
-Reise-appen (`reise/` + `shared/` fra `main`) skal serveres fra **`https://nv5.haatetepe.no/reise/`**.
+Reise-appen (`reise/` fra `main`) serveres fra **`https://nv5.haatetepe.no/reise/`**.  
+Delt kode lastes fra **`/shared/`** (synkes via Admin).
 
-## Status
+## Første gangs oppsett
 
-- **Fase 0:** Placeholder på `reise/index.html` (mono-repo)
-- **PHP-sync for `/reise/`:** kommer i egen `server`-PR (speil `reise/` + `shared/` → `/reise/content/`)
+1. Last opp fra `server`-branchen (eller kjør `/sis/?sync=both` én gang etter merge):
+   - `admin/index.php`, `admin/.htaccess`
+   - `nv5-lib/sync.php`
+2. Åpne **`https://nv5.haatetepe.no/admin/?sync=env`** — henter PHP, shared og admin-UI.
+3. Åpne **`https://nv5.haatetepe.no/reise/?sync=reise`** — henter planleggeren.
 
-## Når PHP er klart
-
-1. Last opp `reise/index.php` og `reise/.htaccess` fra `server`-branchen til `/reise/` på hosten (tilsvarende engangs-oppsett for `/sis/`).
-2. Legg til nginx-location for `/reise/` (speil `nginx-sis-pwa.conf` → `nginx-reise-pwa.conf`).
-3. Åpne `https://nv5.haatetepe.no/reise/?sync=reise` for første sync.
+Legg til nginx-include fra `nginx-nv5.conf` (erstatter eldre `nginx-sis-pwa.conf`).
 
 ## Lokal preview
 
@@ -19,5 +19,6 @@ Reise-appen (`reise/` + `shared/` fra `main`) skal serveres fra **`https://nv5.h
 ./scripts/serve.sh 8080
 ```
 
+- Admin: http://localhost:8080/admin/
 - Tavle: http://localhost:8080/sis/
 - Reise: http://localhost:8080/reise/

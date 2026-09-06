@@ -4,9 +4,10 @@ Mono-repo for NV5-appene på `nv5.haatetepe.no`.
 
 | App | Live | Mappe |
 |-----|------|-------|
+| **Admin** (drift) | `/admin/` | [`admin/`](admin/) |
 | **SIS** (sanntidstavle) | `/sis/` | [`sis/`](sis/) |
 | **Reise** (planlegger) | `/reise/` | [`reise/`](reise/) |
-| **Delt** | — | [`shared/`](shared/) |
+| **Delt** | `/shared/` | [`shared/`](shared/) |
 
 Plan for Reise: [`docs/REISE_PLAN.md`](docs/REISE_PLAN.md).
 
@@ -23,8 +24,8 @@ Plan for Reise: [`docs/REISE_PLAN.md`](docs/REISE_PLAN.md).
 
 | Branch | Innhold |
 |--------|---------|
-| `main` | `sis/`, `reise/`, `shared/`, `docs/` |
-| `server` | PHP-sync til `/sis/` (og senere `/reise/`) |
+| `main` | `admin/`, `sis/`, `reise/`, `shared/`, `docs/` |
+| `server` | PHP-sync, nginx-conf for `/admin/`, `/sis/`, `/reise/`, `/shared/` |
 
 Feature-branches: `cursor/<app>-<beskrivelse>-9451` eller `cursor/server-<beskrivelse>-9451`.
 
@@ -32,23 +33,28 @@ Feature-branches: `cursor/<app>-<beskrivelse>-9451` eller `cursor/server-<beskri
 
 | URL | Effekt |
 |-----|--------|
-| `?sync=main` | Hent `sis/` + `shared/` fra `main` → `/sis/content/` |
-| `?sync=server` | Oppdater PHP fra `server`-branch |
-| `?sync=both` | Begge |
-| `?sync=reise` | *(kommer)* `reise/` + `shared/` → `/reise/content/` |
+| `/admin/?sync=env` | Server (PHP) + `/shared/` fra GitHub |
+| `/admin/?sync=server` | Kun PHP/nginx fra `server`-branch |
+| `/admin/?sync=shared` | Kun `shared/` fra `main` |
+| `/admin/?sync=all` | Miljø + SIS + Reise |
+| `/sis/?sync=sis` | Hent `sis/` fra `main` → `/sis/content/` |
+| `/reise/?sync=reise` | Hent `reise/` fra `main` → `/reise/content/` |
+| `?sync=main` | Legacy-alias for `?sync=sis` |
+| `?sync=both` | Legacy: SIS + server (på `/sis/`) |
+
+Delt kode lastes fra **`/shared/`** (ikke kopiert inn i hver app).
 
 ## Repo-struktur
 
 ```
+admin/         Drift-UI (sync-knapper, lenker)
 sis/           Tavle (index, js/site.js, css/kiosk.css, icons, …)
-reise/         Planlegger (under utvikling)
+reise/         Planlegger
 shared/        js/entur.js, js/util.js, css/tokens.css, fonts/
 docs/          Kunnskap og planer
-scripts/       prepare-dev.sh, serve.sh
-deploy/reise/  Host-oppsett for /reise/
+scripts/       dev_server.py, serve.sh
+deploy/        Host-oppsett
 ```
-
-PHP på host kopierer `shared/` inn i `content/shared/` ved sync, så apper refererer til `shared/js/…` relativt til base-href.
 
 ## Lokal preview
 
@@ -56,14 +62,17 @@ PHP på host kopierer `shared/` inn i `content/shared/` ved sync, så apper refe
 ./scripts/serve.sh 8080
 ```
 
+- http://localhost:8080/admin/ — drift
 - http://localhost:8080/sis/ — sanntidstavle
-- http://localhost:8080/reise/ — reise (placeholder)
+- http://localhost:8080/reise/ — reiseplanlegger
+- http://localhost:8080/shared/ — delt kode (speiler prod)
 
-`prepare-dev.sh` kopierer `shared/` til `sis/shared/` og `reise/shared/` (gitignored).
+Dev-serveren ruter URL-er som på prod; ingen `prepare-dev.sh` eller kopiering av `shared/`.
 
 ## SIS — kort
 
 - Meny: Innstillinger, Legg til holdeplass, **Planlegg reise** → `/reise/`, Hent ny tavle
+- Server/shared: **NV5 Admin** → `/admin/`
 - Standard holdeplass: Tveita T kai `NSR:Quay:11309`
 - Entur-klient: `haatetepe-nv5-sis`
 

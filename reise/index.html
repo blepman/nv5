@@ -14,6 +14,7 @@
     <title>NV5 Reise – reiseplanlegger</title>
     <link rel="manifest" href="manifest.webmanifest" />
     <link rel="stylesheet" href="css/reise.css" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/sis/icons/favicon-32.png" />
   </head>
   <body>
     <div class="reise">
@@ -66,12 +67,17 @@
 
       <footer class="reise__footer">
         <a class="reise__link" href="/sis/">← NV5 SIS sanntidstavle</a>
+        <button type="button" class="reise__sync" id="syncReise" title="Hent Reise fra GitHub">
+          Hent ny versjon
+        </button>
+        <a class="reise__link" href="/admin/">NV5 Admin</a>
       </footer>
     </div>
 
-    <script src="shared/js/util.js"></script>
+    <script src="/shared/js/util.js"></script>
     <script src="config.js" defer></script>
-    <script src="shared/js/entur.js" defer></script>
+    <script src="/shared/js/entur.js" defer></script>
+    <script src="js/site.js" defer></script>
     <script src="js/plan.js" defer></script>
   </body>
 </html>

@@ -1,0 +1,86 @@
+<!DOCTYPE html>
+<html lang="nb">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta name="theme-color" content="#0b1220" />
+    <title>NV5 Admin</title>
+    <link rel="stylesheet" href="css/admin.css" />
+  </head>
+  <body>
+    <div class="admin">
+      <header class="admin__header">
+        <h1>NV5 Admin</h1>
+        <p class="admin__tagline">Drift og synk for nv5.haatetepe.no</p>
+      </header>
+
+      <nav class="admin__apps" aria-label="Apper">
+        <a class="admin__app" href="/sis/">SIS · sanntidstavle</a>
+        <a class="admin__app" href="/reise/">Reise · planlegger</a>
+      </nav>
+
+      <section class="admin__panel">
+        <h2>Miljø og delt kode</h2>
+        <p class="admin__hint">
+          Synk serverfiler, delt <code>/shared/</code> og admin-UI fra GitHub. Kjør dette
+          etter endringer i <code>server</code>- eller <code>shared/</code>-branchen.
+        </p>
+        <div class="admin__actions">
+          <button type="button" class="admin__btn" data-sync="env">Synk miljø</button>
+          <button type="button" class="admin__btn admin__btn--ghost" data-sync="server">
+            Kun server (PHP)
+          </button>
+          <button type="button" class="admin__btn admin__btn--ghost" data-sync="shared">
+            Kun shared
+          </button>
+          <button type="button" class="admin__btn admin__btn--ghost" data-sync="admin">
+            Kun admin-UI
+          </button>
+        </div>
+      </section>
+
+      <section class="admin__panel">
+        <h2>Alle apper</h2>
+        <p class="admin__hint">
+          Henter SIS, Reise, shared og server i én operasjon. App-spesifikke oppdateringer
+          gjøres på <code>/sis/?sync=sis</code> og <code>/reise/?sync=reise</code>.
+        </p>
+        <button type="button" class="admin__btn admin__btn--wide" data-sync="all">
+          Synk alt
+        </button>
+      </section>
+
+      <section class="admin__panel admin__panel--status">
+        <h2>Status</h2>
+        <dl class="admin__shas">
+          <div>
+            <dt>Server</dt>
+            <dd><code id="shaServer">----</code></dd>
+          </div>
+          <div>
+            <dt>Shared</dt>
+            <dd><code id="shaShared">----</code></dd>
+          </div>
+          <div>
+            <dt>SIS</dt>
+            <dd><code id="shaSis">----</code></dd>
+          </div>
+          <div>
+            <dt>Reise</dt>
+            <dd><code id="shaReise">----</code></dd>
+          </div>
+        </dl>
+        <p class="admin__local" id="localHint" hidden>
+          Lokal dev-server har ikke PHP-sync. Bruk GitHub etter merge, eller deploy til
+          <code>nv5.haatetepe.no/admin/</code>.
+        </p>
+      </section>
+
+      <footer class="admin__footer">
+        <span>env-nv5</span>
+      </footer>
+    </div>
+
+    <script src="js/admin.js" defer></script>
+  </body>
+</html>

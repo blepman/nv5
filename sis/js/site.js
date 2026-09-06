@@ -14,7 +14,6 @@
     menuPanel: document.getElementById("menuPanel"),
     addStopOpen: document.getElementById("addStopOpen"),
     settingsOpen: document.getElementById("settingsOpen"),
-    syncServer: document.getElementById("syncServer"),
     syncBoard: document.getElementById("syncBoard"),
     clearLocal: document.getElementById("clearLocal"),
     settingsDialog: document.getElementById("settingsDialog"),
@@ -175,7 +174,9 @@
   function readBuildShas() {
     return {
       server: shaTail(readMetaContent("nv5-server-sha")),
-      board: shaTail(readMetaContent("nv5-board-sha")),
+      board: shaTail(
+        readMetaContent("nv5-sis-sha") || readMetaContent("nv5-board-sha")
+      ),
     };
   }
 
@@ -1669,7 +1670,7 @@
     // Kun full sync/reload når GitHub-intervallet endres (PHP leser cookie)
     if (settings.githubCheckIntervalSeconds !== prevGithub) {
       var url = new URL(window.location.href);
-      url.searchParams.set("sync", "main");
+      url.searchParams.set("sync", "sis");
       window.location.replace(url.toString());
       return;
     }
@@ -2121,7 +2122,12 @@
 
   function forceGithubSync(target) {
     closeMenu();
-    var syncTarget = target === "server" || target === "main" ? target : "both";
+    var syncTarget = "sis";
+    if (target === "server" || target === "both") {
+      syncTarget = target;
+    } else if (target === "main") {
+      syncTarget = "sis";
+    }
     var url = new URL(window.location.href);
     url.searchParams.set("sync", syncTarget);
     window.location.replace(url.toString());
@@ -2135,15 +2141,9 @@
         setMenuOpen(!isMenuOpen());
       });
     }
-    if (els.syncServer) {
-      els.syncServer.addEventListener("click", function () {
-        closeSettings();
-        forceGithubSync("server");
-      });
-    }
     if (els.syncBoard) {
       els.syncBoard.addEventListener("click", function () {
-        forceGithubSync("main");
+        forceGithubSync("sis");
       });
     }
     if (els.clearLocal) {

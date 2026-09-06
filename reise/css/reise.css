@@ -1,4 +1,4 @@
-@import url("../shared/css/tokens.css");
+@import url("/shared/css/tokens.css");
 
 .reise {
   min-height: 100dvh;
@@ -323,9 +323,29 @@
 }
 
 .reise__footer {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem 1rem;
   border-top: 1px solid var(--line);
   padding-top: 0.75rem;
   font-size: 0.85rem;
+}
+
+.reise__sync {
+  padding: 0.35rem 0.65rem;
+  border: 1px solid var(--line);
+  border-radius: 0.45rem;
+  background: transparent;
+  color: var(--text);
+  font: inherit;
+  font-size: 0.85rem;
+  cursor: pointer;
+}
+
+.reise__sync:hover {
+  border-color: var(--accent);
+  color: var(--accent);
 }
 
 @media (min-width: 480px) {

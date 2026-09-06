@@ -22,14 +22,14 @@
     <link rel="apple-touch-icon" href="icons/apple-touch-icon.png" />
     <link
       rel="preload"
-      href="shared/fonts/ibm-plex-sans-700-latin.woff2"
+      href="/shared/fonts/ibm-plex-sans-700-latin.woff2"
       as="font"
       type="font/woff2"
       crossorigin
     />
     <link
       rel="preload"
-      href="shared/fonts/ibm-plex-sans-600-latin.woff2"
+      href="/shared/fonts/ibm-plex-sans-600-latin.woff2"
       as="font"
       type="font/woff2"
       crossorigin
@@ -71,7 +71,7 @@
               type="button"
               class="menu__item"
               id="syncBoard"
-              title="Henter HTML/CSS/JS fra GitHub-branchen main"
+              title="Henter SIS fra GitHub (main/sis/)"
             >
               Hent ny tavle
             </button>
@@ -96,7 +96,7 @@
         <span class="board__footer-item board__footer-build" hidden
           >server <code id="buildServerSha">----</code></span>
         <span class="board__footer-item board__footer-build" hidden
-          >main <code id="buildBoardSha">----</code></span>
+          >sis <code id="buildBoardSha">----</code></span>
         <a
           class="board__footer-item board__footer-link"
           href="icons/favicon-32.png"
@@ -208,7 +208,7 @@
           hidden
         >
           <label class="settings__field">
-            <span>Sjekk tavlekode fra GitHub (main)</span>
+            <span>Sjekk tavlekode fra GitHub (sis)</span>
             <select id="githubCheckInterval">
               <option value="60">Hvert minutt</option>
               <option value="300" selected>Hvert 5. minutt</option>
@@ -217,25 +217,17 @@
               <option value="3600">Hver time</option>
             </select>
             <small>
-              Styrer hvor ofte tavlen (HTML/CSS/JS) sjekkes fra main (minst
-              hvert minutt). Bruk «Hent ny tavle» i menyen for å hente med en
-              gang.
+              Styrer hvor ofte tavlen sjekkes fra GitHub (minst hvert minutt).
+              Bruk «Hent ny tavle» i menyen for å hente med en gang.
             </small>
           </label>
 
           <div class="settings__field">
-            <span>Serverfiler (server-branch)</span>
-            <button
-              type="button"
-              class="settings__action"
-              id="syncServer"
-              title="Henter PHP/serverfiler fra GitHub-branchen server"
-            >
-              Bygg siden på nytt
-            </button>
+            <span>Server, shared og miljø</span>
+            <a class="settings__action" href="/admin/">Åpne NV5 Admin</a>
             <small>
-              Sjekkes automatisk hver time. Bruk knappen bare når serverkoden er
-              endret.
+              PHP, nginx og <code>/shared/</code> synkes fra
+              <code>/admin/?sync=env</code>.
             </small>
           </div>
         </div>
@@ -311,9 +303,9 @@
       <p>NV5 SIS krever JavaScript for å vise sanntidsavganger.</p>
     </noscript>
 
-    <script src="shared/js/util.js"></script>
+    <script src="/shared/js/util.js"></script>
     <script src="config.js" defer></script>
-    <script src="shared/js/entur.js" defer></script>
+    <script src="/shared/js/entur.js" defer></script>
     <script src="js/site.js" defer></script>
   </body>
 </html>
