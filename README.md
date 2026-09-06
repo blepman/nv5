@@ -46,7 +46,9 @@ På prod ligger webroot og secrets side om side:
         └── config.php   # opprettes ved sync — rediger passord der
 ```
 
-`config.php` opprettes automatisk ved server-sync (eller første `/admin/`-besøk) hvis den ikke finnes. Sync **overskriver ikke** en eksisterende fil — rediger passordet på serveren etterpå.
+`config.php` opprettes automatisk ved server-sync (eller første `/admin/`-besøk) i **env/env-nv5 ved siden av www** — ikke inni `www/`. Sync overskriver ikke en eksisterende fil.
+
+Filrettigheter settes slik at du kan se og redigere `config.php` i filbehandler/SFTP (0644).
 
 PHP leser i rekkefølge: `getenv()` → `env/env-nv5/config.php` → enkeltfil i `env/env-nv5/` → state-mappe (fallback).
 
