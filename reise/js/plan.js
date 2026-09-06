@@ -203,14 +203,20 @@
     );
   }
 
+  function changesLabel(changes) {
+    if (changes === 0) {
+      return "Ingen bytter";
+    }
+    if (changes === 1) {
+      return "1 bytte";
+    }
+    return changes + " bytter";
+  }
+
   function formatPatternMeta(pattern) {
     var parts = [];
-    if (pattern.changes === 0) {
-      parts.push("Ingen bytter");
-    } else if (pattern.changes === 1) {
-      parts.push("1 bytte");
-    } else {
-      parts.push(pattern.changes + " bytter");
+    if (pattern.changes <= 2) {
+      parts.push(changesLabel(pattern.changes));
     }
     if (pattern.walkDuration >= 60) {
       parts.push(formatDuration(pattern.walkDuration) + " gange");
@@ -396,6 +402,13 @@
   }
 
   function renderPatternRouteChips(pattern) {
+    if (pattern.changes > 2) {
+      return (
+        '<span class="trip-summary-compact">' +
+        escapeHtml(changesLabel(pattern.changes)) +
+        "</span>"
+      );
+    }
     var chips = [];
     (pattern.legs || []).forEach(function (leg, index) {
       if (index > 0) {

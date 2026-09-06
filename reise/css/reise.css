@@ -273,6 +273,13 @@
   row-gap: 0.28rem;
 }
 
+.trip-summary-compact {
+  font-size: 0.88rem;
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--text);
+}
+
 .trip-summary-leg {
   display: inline-flex;
   align-items: center;
