@@ -127,6 +127,83 @@
     coach: "Buss",
   };
 
+  // Oslo linjekart — overstyrer Entur for T-bane, trikk og tog. Buss/coach beholdes fra Entur.
+  const OSLO_METRO_COLOURS = {
+    1: "#00A9EE",
+    2: "#E74D14",
+    3: "#B800F1",
+    4: "#004296",
+    5: "#00B159",
+  };
+
+  const OSLO_TRAM_COLOURS = {
+    11: "#003399",
+    12: "#7F00FF",
+    13: "#009933",
+    17: "#FF0000",
+    18: "#FFCC00",
+    19: "#E6007E",
+  };
+
+  const OSLO_RAIL_PREFIX_COLOURS = [
+    { prefix: "FLY", colour: "#E85C0E" },
+    { prefix: "RE", colour: "#4A154B" },
+    { prefix: "R", colour: "#181C56" },
+    { prefix: "L", colour: "#40875B" },
+    { prefix: "F", colour: "#800020" },
+  ];
+
+  function contrastTextColour(hex) {
+    if (!hex || hex.charAt(0) !== "#" || hex.length !== 7) {
+      return "#FFFFFF";
+    }
+    var r = parseInt(hex.slice(1, 3), 16);
+    var g = parseInt(hex.slice(3, 5), 16);
+    var b = parseInt(hex.slice(5, 7), 16);
+    var luminance = (0.299 * r + 0.587 * g + 0.114 * b) / 255;
+    return luminance > 0.55 ? "#000000" : "#FFFFFF";
+  }
+
+  function osloLineColour(transportMode, publicCode) {
+    var code = String(publicCode || "").trim();
+    if (!code) {
+      return "";
+    }
+    if (transportMode === "metro") {
+      return OSLO_METRO_COLOURS[code] || "";
+    }
+    if (transportMode === "tram") {
+      return OSLO_TRAM_COLOURS[code] || "";
+    }
+    if (transportMode === "rail") {
+      var upper = code.toUpperCase();
+      for (var i = 0; i < OSLO_RAIL_PREFIX_COLOURS.length; i++) {
+        var entry = OSLO_RAIL_PREFIX_COLOURS[i];
+        if (upper.indexOf(entry.prefix) === 0) {
+          return entry.colour;
+        }
+      }
+    }
+    return "";
+  }
+
+  function linePresentationColours(line) {
+    var presentation = (line && line.presentation) || {};
+    var transportMode = (line && line.transportMode) || "";
+    var publicCode = (line && line.publicCode) || "";
+    var osloColour = osloLineColour(transportMode, publicCode);
+    if (osloColour) {
+      return {
+        colour: osloColour,
+        textColour: contrastTextColour(osloColour),
+      };
+    }
+    return {
+      colour: presentation.colour ? "#" + presentation.colour : "",
+      textColour: presentation.textColour ? "#" + presentation.textColour : "",
+    };
+  }
+
   function modeLabel(mode) {
     return MODE_LABELS[mode] || mode || "";
   }
@@ -649,7 +726,7 @@
       .filter(Boolean);
 
     const line = (call.serviceJourney && call.serviceJourney.line) || {};
-    const presentation = line.presentation || {};
+    const presentation = linePresentationColours(line);
 
     const quay = call.quay || {};
     const destination =
@@ -668,8 +745,8 @@
       line: line.publicCode || "–",
       destination: destination,
       mode: line.transportMode || "",
-      colour: presentation.colour ? "#" + presentation.colour : "",
-      textColour: presentation.textColour ? "#" + presentation.textColour : "",
+      colour: presentation.colour || "",
+      textColour: presentation.textColour || "",
       expected: expected,
       aimed: aimed,
       realtime: Boolean(call.realtime),
@@ -691,7 +768,9 @@
 
   function normalizeTripLeg(leg) {
     var line = leg.line || {};
-    var presentation = line.presentation || {};
+    var presentation = linePresentationColours(line);
+    var occupancyStatus =
+      (leg.fromEstimatedCall && leg.fromEstimatedCall.occupancyStatus) || "noData";
     var situations = (leg.situations || [])
       .map(function (s) {
         var summary = (s.summary || []).find(function (item) {
@@ -718,11 +797,13 @@
           leg.fromEstimatedCall.destinationDisplay.frontText) ||
         "",
       transportMode: line.transportMode || leg.mode || "",
-      colour: presentation.colour ? "#" + presentation.colour : "",
-      textColour: presentation.textColour ? "#" + presentation.textColour : "",
+      colour: presentation.colour || "",
+      textColour: presentation.textColour || "",
       startTime: parseTime(leg.expectedStartTime || leg.aimedStartTime),
       endTime: parseTime(leg.expectedEndTime || leg.aimedEndTime),
       situations: situations,
+      occupancyStatus: occupancyStatus,
+      occupancyLabel: occupancyLabel(occupancyStatus),
     };
   }
 
@@ -771,6 +852,7 @@
     toPlace { name quay { publicCode description } }
     fromEstimatedCall {
       destinationDisplay { frontText }
+      occupancyStatus
     }
     line {
       publicCode

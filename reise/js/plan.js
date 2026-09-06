@@ -385,6 +385,12 @@
             escapeHtml(leg.situations.join(" ")) +
             "</p>"
           : "";
+        var occupancy =
+          leg.mode !== "foot" && leg.occupancyLabel
+            ? '<p class="trip-leg__occupancy">' +
+              escapeHtml(leg.occupancyLabel) +
+              "</p>"
+            : "";
         return (
           '<li class="trip-leg">' +
           '<div class="trip-leg__aside">' +
@@ -410,6 +416,7 @@
           '<p class="trip-leg__route">' +
           escapeHtml(legRoute(leg)) +
           "</p>" +
+          occupancy +
           situations +
           "</div></li>"
         );
