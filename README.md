@@ -36,11 +36,11 @@ Feature-branches: `cursor/<app>-<beskrivelse>-9451` eller `cursor/server-<beskri
 | `/admin/?sync=env` | Server (PHP) + `/shared/` fra GitHub |
 | `/admin/?sync=server` | Kun PHP/nginx fra `server`-branch |
 | `/admin/?sync=shared` | Kun `shared/` fra `main` |
+| `/admin/?sync=sis` | Kun SIS-innhold |
+| `/admin/?sync=reise` | Kun Reise-innhold |
 | `/admin/?sync=all` | Miljø + SIS + Reise |
-| `/sis/?sync=sis` | Hent `sis/` fra `main` → `/sis/content/` |
-| `/reise/?sync=reise` | Hent `reise/` fra `main` → `/reise/content/` |
-| `?sync=main` | Legacy-alias for `?sync=sis` |
-| `?sync=both` | Legacy: SIS + server (på `/sis/`) |
+| `/sis/?sync=1` | Hent `sis/` fra `main` → `/sis/content/` |
+| `/reise/?sync=1` | Hent `reise/` fra `main` → `/reise/content/` |
 
 Delt kode lastes fra **`/shared/`** (ikke kopiert inn i hver app).
 

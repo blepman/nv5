@@ -6,7 +6,7 @@
 
   syncButton.addEventListener("click", function () {
     var url = new URL(window.location.href);
-    url.searchParams.set("sync", "reise");
+    url.searchParams.set("sync", "1");
     window.location.replace(url.toString());
   });
 

@@ -11,7 +11,7 @@ NV5-SIS er en **sanntidstavle (kiosk)** på `https://nv5.haatetepe.no/sis/`. Rei
 - Feature-branch: `cursor/<beskrivelse>-e142` (lowercase).
 - Inneholder **`main`** → tavle (HTML/CSS/JS). Inneholder **`server`** → PHP/speil.
 - Når arbeidet er ferdig: **commit, push, PR, merge til riktig base** (`main` / `server`) uten å blokkere på at brukeren må synce manuelt først.
-- Etter merge kan brukeren synce live (`?sync=env` på `/admin/`, `?sync=sis` / `?sync=reise` på appene); tilby det kort, ikke som forutsetning for merge.
+- Etter merge kan brukeren synce live (`?sync=env` på `/admin/`, `?sync=1` på `/sis/` og `/reise/`); tilby det kort, ikke som forutsetning for merge.
 - Ikke commit midlertidige undersøkelsesfiler, handoff-lister eller Tognr-kode inn i dette repoet med mindre brukeren ber om det.
 
 ## Dokumentasjon — hold den levende

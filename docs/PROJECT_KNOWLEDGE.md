@@ -55,12 +55,15 @@ Feature-branches: navn må inneholde `main` eller `server` etter mål.
 | Sted | Param | Effekt |
 |---|---|---|
 | `/admin/` | `?sync=env` | Server + shared |
+| `/admin/` | `?sync=server` | Kun PHP/nginx |
+| `/admin/` | `?sync=shared` | Kun `/shared/` |
+| `/admin/` | `?sync=sis` | Kun SIS-innhold |
+| `/admin/` | `?sync=reise` | Kun Reise-innhold |
 | `/admin/` | `?sync=all` | Alt |
-| `/sis/` | `?sync=sis` | Kun tavle (`main/sis/`) |
-| `/reise/` | `?sync=reise` | Kun planlegger |
-| `/sis/` | `?sync=both` | Legacy: sis + server |
+| `/sis/` | `?sync=1` | Kun tavle (`main/sis/`) |
+| `/reise/` | `?sync=1` | Kun planlegger |
 
-`?sync=main` er alias for `?sync=sis`. Server/shared styres fra **Admin**, ikke SIS-menyen.
+Navngitte sync-parametre brukes på **Admin**. App-sider bruker `?sync=1` for «oppdater denne siden». Server/shared styres fra Admin.
 
 **Innstillinger:** `localStorage` (`nv5-sis-settings`) + cookie for GitHub-sjekkintervall (PHP leser cookien). Minimum intervall 60s; bruk `?sync=` for øyeblikkelig sjekk.
 
