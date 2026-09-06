@@ -188,16 +188,22 @@
     return modeLabel(leg.transportMode || leg.mode);
   }
 
-  function legSubtitle(leg) {
+  function legHeadsign(leg) {
+    if (leg.mode === "foot" || !leg.lineDestination) {
+      return "";
+    }
+    return leg.lineDestination;
+  }
+
+  function legRoute(leg) {
+    return leg.fromName + " → " + leg.toName;
+  }
+
+  function legModeUnderBadge(leg) {
     if (leg.mode === "foot") {
-      return leg.fromName + " → " + leg.toName;
+      return "Gange";
     }
-    var parts = [modeLabel(leg.transportMode || leg.mode)];
-    if (leg.lineName) {
-      parts.push(leg.lineName);
-    }
-    parts.push(leg.fromName + " → " + leg.toName);
-    return parts.filter(Boolean).join(" · ");
+    return modeLabel(leg.transportMode || leg.mode);
   }
 
   function lineStyleAttr(leg) {
@@ -225,6 +231,12 @@
               ">" +
               escapeHtml(leg.lineCode || modeLabel(leg.transportMode)) +
               "</span>";
+        var headsign = legHeadsign(leg);
+        var headsignHtml = headsign
+          ? '<span class="trip-leg__headsign">Endestopp ' +
+            escapeHtml(headsign) +
+            "</span>"
+          : "";
         var situations = leg.situations.length
           ? '<p class="trip-leg__situation">' +
             escapeHtml(leg.situations.join(" ")) +
@@ -232,12 +244,18 @@
           : "";
         return (
           '<li class="trip-leg">' +
+          '<div class="trip-leg__aside">' +
           badge +
+          '<span class="trip-leg__mode">' +
+          escapeHtml(legModeUnderBadge(leg)) +
+          "</span>" +
+          "</div>" +
           '<div class="trip-leg__body">' +
           '<div class="trip-leg__top">' +
           "<strong>" +
           escapeHtml(legTitle(leg)) +
           "</strong>" +
+          headsignHtml +
           '<time class="trip-leg__time">' +
           escapeHtml(formatClock(leg.startTime)) +
           "–" +
@@ -245,7 +263,7 @@
           "</time>" +
           "</div>" +
           '<p class="trip-leg__route">' +
-          escapeHtml(legSubtitle(leg)) +
+          escapeHtml(legRoute(leg)) +
           "</p>" +
           situations +
           "</div></li>"
