@@ -26,6 +26,7 @@ function nv5_run(string $appId, string $appRoot): void
     nv5_migrate_and_scrub_webroot_state($appRoot, $stateDir);
 
     if ($appId === 'admin') {
+        nv5_ensure_host_config($siteRoot);
         nv5_require_admin_auth($siteRoot, $stateDir);
     }
 
@@ -286,6 +287,7 @@ function nv5_maybe_sync_server(array $paths, bool $force): void
         nv5_sync_server_branch($paths['site_root'], $paths['server_sha'], $force);
         file_put_contents($paths['server_check'], (string) time());
     });
+    nv5_ensure_host_config($paths['site_root']);
 }
 
 function nv5_maybe_sync_shared(array $paths, bool $force): void
@@ -416,6 +418,36 @@ function nv5_host_env(string $siteRoot, string $name): string
     return '';
 }
 
+function nv5_ensure_host_config(string $siteRoot): void
+{
+    $dir = nv5_host_env_dir($siteRoot);
+    if (!is_dir($dir) && !@mkdir($dir, 0700, true) && !is_dir($dir)) {
+        return;
+    }
+
+    $path = $dir . '/config.php';
+    if (is_file($path)) {
+        return;
+    }
+
+    $template = <<<'PHP'
+<?php
+declare(strict_types=1);
+
+return [
+    'NV5_ADMIN_USER' => 'admin',
+    'NV5_ADMIN_PASSWORD' => '',
+];
+
+PHP;
+
+    try {
+        nv5_write_atomic($path, $template);
+        @chmod($path, 0600);
+    } catch (Throwable $e) {
+    }
+}
+
 function nv5_sync_server_secret(string $siteRoot, string $stateDir): string
 {
     $secret = nv5_host_env($siteRoot, 'NV5_SYNC_SERVER_KEY');
@@ -470,6 +502,15 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         ];
     }
 
+    $configPath = nv5_host_env_dir($siteRoot) . '/config.php';
+    if (is_readable($configPath)) {
+        return [
+            'active' => false,
+            'source' => '',
+            'hint' => 'Rediger env/env-nv5/config.php og sett NV5_ADMIN_PASSWORD.',
+        ];
+    }
+
     $envFile = nv5_host_env_dir($siteRoot) . '/NV5_ADMIN_PASSWORD';
     if (is_readable($envFile)) {
         return [
@@ -489,8 +530,8 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
     }
 
     $hint = is_dir(nv5_host_env_dir($siteRoot))
-        ? 'Mappen env/env-nv5 finnes, men config.php / NV5_ADMIN_PASSWORD mangler eller er ikke lesbar for PHP.'
-        : 'Fant ikke env/env-nv5 ved siden av www/. Opprett config.php der (se env-nv5.config.example.php i repo).';
+        ? 'env/env-nv5 finnes, men config.php mangler eller er ikke lesbar for PHP.'
+        : 'env/env-nv5/config.php opprettes ved server-sync eller første admin-besøk.';
 
     return [
         'active' => false,
@@ -539,8 +580,7 @@ function nv5_build_admin_notice(string $siteRoot, string $stateDir, array $sync,
         $lines[] = '<strong>Admin-passord:</strong> aktiv (' . htmlspecialchars($auth['source'], ENT_QUOTES, 'UTF-8') . ').';
     } else {
         $lines[] = '<strong>Admin-passord:</strong> ikke satt. '
-            . htmlspecialchars($auth['hint'], ENT_QUOTES, 'UTF-8')
-            . ' Sync henter <em>ikke</em> passord fra GitHub — du må opprette filen på serveren.';
+            . htmlspecialchars($auth['hint'], ENT_QUOTES, 'UTF-8');
     }
 
     $syncLine = nv5_admin_sync_notice($siteRoot, $stateDir, $sync, $retryAfter);
@@ -626,7 +666,7 @@ function nv5_legacy_webroot_state_map(): array
  */
 function nv5_server_sync_skip_web(): array
 {
-    return ['README.md', '.gitignore', 'index-initial.php', 'env-nv5.config.example.php'];
+    return ['README.md', '.gitignore', 'index-initial.php'];
 }
 
 /**
@@ -998,6 +1038,7 @@ function nv5_sync_server_branch(string $siteRoot, string $shaFile, bool $force =
 
     $local = is_file($shaFile) ? trim((string) file_get_contents($shaFile)) : '';
     if (!$force && $remote === $local && nv5_server_webroot_complete($siteRoot)) {
+        nv5_ensure_host_config($siteRoot);
         return;
     }
     if (!class_exists('ZipArchive')) {
@@ -1047,6 +1088,7 @@ function nv5_sync_server_branch(string $siteRoot, string $shaFile, bool $force =
 
         file_put_contents($shaFile, $remote . "\n");
         nv5_log_sync_event(dirname($shaFile), 'server_sync sha=' . substr($remote, 0, 12));
+        nv5_ensure_host_config($siteRoot);
     } finally {
         @unlink($zipPath);
         nv5_rm_tree($extract);
