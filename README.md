@@ -43,12 +43,14 @@ På prod ligger webroot og secrets side om side:
 ├── www/                 # webroot — admin/, sis/, reise/, shared/, …
 └── env/
     └── env-nv5/
-        └── config.php   # opprettes ved sync — rediger passord der
+        └── config.php   # ved siden av www — ikke inni www/
 ```
 
-`config.php` opprettes automatisk ved server-sync (eller første `/admin/`-besøk) i **env/env-nv5 ved siden av www** — ikke inni `www/`. Sync overskriver ikke en eksisterende fil.
+`config.php` opprettes i **env/env-nv5 ved siden av www** (søster-mappe til `www/`, ikke `www/env/`). Ved feilplassering inni www flyttes filen automatisk ved sync/admin.
 
-Filrettigheter settes slik at du kan se og redigere `config.php` i filbehandler/SFTP (0644).
+Hvis PHP kjører i chroot og ikke ser mappen over www: sett **`NV5_ENV_DIR`** til absolutt sti (f.eks. `/home/konto/env/env-nv5`) i host-miljøet.
+
+Filrettigheter settes slik at du kan redigere `config.php` i filbehandler/SFTP (0644).
 
 PHP leser i rekkefølge: `getenv()` → `env/env-nv5/config.php` → enkeltfil i `env/env-nv5/` → state-mappe (fallback).
 

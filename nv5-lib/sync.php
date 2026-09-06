@@ -26,6 +26,7 @@ function nv5_run(string $appId, string $appRoot): void
     nv5_migrate_and_scrub_webroot_state($appRoot, $stateDir);
 
     if ($appId === 'admin') {
+        nv5_migrate_host_env_from_webroot($siteRoot);
         nv5_ensure_host_config($siteRoot);
         nv5_require_admin_auth($siteRoot, $stateDir);
     }
@@ -346,22 +347,105 @@ function nv5_client_ip(): string
     return $ip !== '' ? $ip : 'unknown';
 }
 
+function nv5_site_root_real(string $siteRoot): string
+{
+    $resolved = realpath($siteRoot);
+    $path = $resolved !== false ? $resolved : $siteRoot;
+    return rtrim(str_replace('\\', '/', $path), '/');
+}
+
+function nv5_webroot_env_dir(string $siteRoot): string
+{
+    return nv5_site_root_real($siteRoot) . '/env/env-nv5';
+}
+
+function nv5_host_env_parent_accessible(string $siteRoot): bool
+{
+    $root = nv5_site_root_real($siteRoot);
+    $parent = dirname($root);
+    return $parent !== $root && $parent !== '' && $parent !== '/' && is_dir($parent);
+}
+
 function nv5_host_env_dir(string $siteRoot): string
 {
-    $candidates = [
-        dirname($siteRoot) . '/env/env-nv5',
-        $siteRoot . '/../env/env-nv5',
-    ];
-    foreach ($candidates as $candidate) {
-        $resolved = realpath($candidate);
-        if ($resolved !== false && is_dir($resolved)) {
-            return $resolved;
+    $fromEnv = trim((string) (getenv('NV5_ENV_DIR') ?: ''));
+    if ($fromEnv !== '') {
+        return rtrim(str_replace('\\', '/', $fromEnv), '/');
+    }
+
+    $root = nv5_site_root_real($siteRoot);
+    $parent = dirname($root);
+    if ($parent !== $root && $parent !== '' && $parent !== '/') {
+        return $parent . '/env/env-nv5';
+    }
+
+    return $parent . '/env/env-nv5';
+}
+
+function nv5_block_webroot_env_http(string $siteRoot): void
+{
+    $envDir = nv5_site_root_real($siteRoot) . '/env';
+    if (!is_dir($envDir)) {
+        return;
+    }
+    $htaccess = $envDir . '/.htaccess';
+    if (is_file($htaccess)) {
+        return;
+    }
+    $body = <<<'HTACCESS'
+Require all denied
+
+HTACCESS;
+    @file_put_contents($htaccess, $body);
+}
+
+function nv5_migrate_host_env_from_webroot(string $siteRoot): void
+{
+    $wrong = nv5_webroot_env_dir($siteRoot);
+    $correct = nv5_host_env_dir($siteRoot);
+    if ($wrong === $correct) {
+        nv5_block_webroot_env_http($siteRoot);
+        return;
+    }
+
+    if (!nv5_host_env_parent_accessible($siteRoot)) {
+        nv5_block_webroot_env_http($siteRoot);
+        return;
+    }
+
+    if (!is_dir(dirname($correct)) && !@mkdir(dirname($correct), 0755, true) && !is_dir(dirname($correct))) {
+        return;
+    }
+    if (!is_dir($correct) && !@mkdir($correct, 0755, true) && !is_dir($correct)) {
+        return;
+    }
+
+    $wrongConfig = $wrong . '/config.php';
+    $correctConfig = $correct . '/config.php';
+    if (is_file($wrongConfig) && !is_file($correctConfig)) {
+        if (!@rename($wrongConfig, $correctConfig)) {
+            $data = file_get_contents($wrongConfig);
+            if ($data !== false) {
+                nv5_write_atomic($correctConfig, $data);
+                @unlink($wrongConfig);
+            }
         }
-        if (is_dir($candidate)) {
-            return $candidate;
+        @chmod($correctConfig, 0644);
+    }
+
+    if (is_dir($wrong)) {
+        $entries = array_diff(scandir($wrong) ?: [], ['.', '..']);
+        if ($entries === []) {
+            @rmdir($wrong);
+            $legacyEnv = dirname($wrong);
+            if (is_dir($legacyEnv) && array_diff(scandir($legacyEnv) ?: [], ['.', '..', '.htaccess']) === []) {
+                @unlink($legacyEnv . '/.htaccess');
+                @rmdir($legacyEnv);
+            }
         }
     }
-    return dirname($siteRoot) . '/env/env-nv5';
+
+    nv5_block_webroot_env_http($siteRoot);
 }
 
 /**
@@ -420,6 +504,12 @@ function nv5_host_env(string $siteRoot, string $name): string
 
 function nv5_ensure_host_config(string $siteRoot): void
 {
+    nv5_migrate_host_env_from_webroot($siteRoot);
+
+    if (!nv5_host_env_parent_accessible($siteRoot) && trim((string) (getenv('NV5_ENV_DIR') ?: '')) === '') {
+        return;
+    }
+
     $dir = nv5_host_env_dir($siteRoot);
     if (!is_dir($dir) && !@mkdir($dir, 0755, true) && !is_dir($dir)) {
         return;
@@ -509,9 +599,24 @@ function nv5_admin_password_status(string $siteRoot, string $stateDir): array
         return [
             'active' => false,
             'source' => '',
-            'hint' => 'config.php finnes — sett NV5_ADMIN_PASSWORD. '
-                . 'Mappen er env/env-nv5 ved siden av www (ikke inni www). '
-                . 'Oppdater filbehandleren hvis mappen ser tom ut.',
+            'hint' => 'config.php finnes — sett NV5_ADMIN_PASSWORD i env/env-nv5 ved siden av www.',
+        ];
+    }
+
+    $legacyDir = nv5_webroot_env_dir($siteRoot);
+    if (is_dir($legacyDir)) {
+        return [
+            'active' => false,
+            'source' => '',
+            'hint' => 'env/env-nv5 ligger feil inni www/. Flytt til env/env-nv5 ved siden av www (sync/admin prøver automatisk).',
+        ];
+    }
+
+    if (!nv5_host_env_parent_accessible($siteRoot) && trim((string) (getenv('NV5_ENV_DIR') ?: '')) === '') {
+        return [
+            'active' => false,
+            'source' => '',
+            'hint' => 'PHP ser ikke mappen over www (chroot). Sett NV5_ENV_DIR til absolutt sti utenfor www, eller legg passord i state-mappen.',
         ];
     }
 
