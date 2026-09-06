@@ -5,11 +5,11 @@ Delt kode lastes fra **`/shared/`** (synkes via Admin).
 
 ## Første gangs oppsett
 
-1. Last opp fra `server`-branchen (eller kjør `/sis/?sync=both` én gang etter merge):
+1. Last opp fra `server`-branchen (eller kjør `/admin/?sync=env` etter første manuelle opplasting):
    - `admin/index.php`, `admin/.htaccess`
    - `nv5-lib/sync.php`
 2. Åpne **`https://nv5.haatetepe.no/admin/?sync=env`** — henter PHP, shared og admin-UI.
-3. Åpne **`https://nv5.haatetepe.no/reise/?sync=reise`** — henter planleggeren.
+3. Åpne **`https://nv5.haatetepe.no/reise/?sync=1`** — henter planleggeren.
 
 Legg til nginx-include fra `nginx-nv5.conf` (erstatter eldre `nginx-sis-pwa.conf`).
 

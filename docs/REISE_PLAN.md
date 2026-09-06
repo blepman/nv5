@@ -133,11 +133,14 @@ Alt under er **must-have** før v1 regnes som ferdig:
 
 | URL | Effekt |
 |---|---|
-| `?sync=sis` | Hent tavle fra `main` → `/sis/content/` |
-| `?sync=reise` | Hent planlegger → `/reise/content/` |
-| `?sync=server` | Oppdater PHP/nginx |
-| `?sync=both` | Legacy: sis + server (beholdes) |
-| `?sync=all` | sis + reise + server |
+| `/admin/?sync=env` | Server + shared |
+| `/admin/?sync=server` | PHP/nginx |
+| `/admin/?sync=shared` | `/shared/` |
+| `/admin/?sync=sis` | SIS-innhold |
+| `/admin/?sync=reise` | Reise-innhold |
+| `/admin/?sync=all` | Alt |
+| `/sis/?sync=1` | Tavle fra `main` → `/sis/content/` |
+| `/reise/?sync=1` | Planlegger → `/reise/content/` |
 
 ---
 

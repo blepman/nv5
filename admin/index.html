@@ -40,10 +40,25 @@
       </section>
 
       <section class="admin__panel">
-        <h2>Alle apper</h2>
+        <h2>Apper</h2>
         <p class="admin__hint">
-          Henter SIS, Reise, shared og server i én operasjon. App-spesifikke oppdateringer
-          gjøres på <code>/sis/?sync=sis</code> og <code>/reise/?sync=reise</code>.
+          På hver app-side holder <code>?sync=1</code> for å oppdatere bare den siden
+          (f.eks. <code>/sis/?sync=1</code>). Her kan du også synke enkeltapper:
+        </p>
+        <div class="admin__actions">
+          <button type="button" class="admin__btn admin__btn--ghost" data-sync="sis">
+            Synk SIS
+          </button>
+          <button type="button" class="admin__btn admin__btn--ghost" data-sync="reise">
+            Synk Reise
+          </button>
+        </div>
+      </section>
+
+      <section class="admin__panel">
+        <h2>Alt på en gang</h2>
+        <p class="admin__hint">
+          Henter miljø, shared, server og begge apper i én operasjon.
         </p>
         <button type="button" class="admin__btn admin__btn--wide" data-sync="all">
           Synk alt

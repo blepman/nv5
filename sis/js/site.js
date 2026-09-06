@@ -1670,7 +1670,7 @@
     // Kun full sync/reload når GitHub-intervallet endres (PHP leser cookie)
     if (settings.githubCheckIntervalSeconds !== prevGithub) {
       var url = new URL(window.location.href);
-      url.searchParams.set("sync", "sis");
+      url.searchParams.set("sync", "1");
       window.location.replace(url.toString());
       return;
     }
@@ -2120,16 +2120,10 @@
     setMenuOpen(false);
   }
 
-  function forceGithubSync(target) {
+  function forceGithubSync() {
     closeMenu();
-    var syncTarget = "sis";
-    if (target === "server" || target === "both") {
-      syncTarget = target;
-    } else if (target === "main") {
-      syncTarget = "sis";
-    }
     var url = new URL(window.location.href);
-    url.searchParams.set("sync", syncTarget);
+    url.searchParams.set("sync", "1");
     window.location.replace(url.toString());
   }
 
@@ -2143,7 +2137,7 @@
     }
     if (els.syncBoard) {
       els.syncBoard.addEventListener("click", function () {
-        forceGithubSync("sis");
+        forceGithubSync();
       });
     }
     if (els.clearLocal) {
