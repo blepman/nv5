@@ -77,7 +77,12 @@ function nv5_run(string $appId, string $appRoot): void
         }
 
         if ($appId === 'admin') {
-            nv5_render_admin($paths);
+            nv5_render_admin($paths, [
+                'site_root' => $siteRoot,
+                'state_dir' => $stateDir,
+                'sync' => $sync,
+                'retry_after' => $gate['retry_after'],
+            ]);
             return;
         }
 
@@ -341,6 +346,19 @@ function nv5_client_ip(): string
 
 function nv5_host_env_dir(string $siteRoot): string
 {
+    $candidates = [
+        dirname($siteRoot) . '/env/env-nv5',
+        $siteRoot . '/../env/env-nv5',
+    ];
+    foreach ($candidates as $candidate) {
+        $resolved = realpath($candidate);
+        if ($resolved !== false && is_dir($resolved)) {
+            return $resolved;
+        }
+        if (is_dir($candidate)) {
+            return $candidate;
+        }
+    }
     return dirname($siteRoot) . '/env/env-nv5';
 }
 
@@ -387,6 +405,103 @@ function nv5_admin_credentials(string $siteRoot, string $stateDir): array
         }
     }
     return ['user' => $user, 'pass' => $pass];
+}
+
+/**
+ * @return array{active:bool,source:string,hint:string}
+ */
+function nv5_admin_password_status(string $siteRoot, string $stateDir): array
+{
+    if (trim((string) (getenv('NV5_ADMIN_PASSWORD') ?: '')) !== '') {
+        return [
+            'active' => true,
+            'source' => 'miljøvariabel NV5_ADMIN_PASSWORD',
+            'hint' => '',
+        ];
+    }
+
+    $envFile = nv5_host_env_dir($siteRoot) . '/NV5_ADMIN_PASSWORD';
+    if (is_readable($envFile)) {
+        return [
+            'active' => true,
+            'source' => 'env/env-nv5/NV5_ADMIN_PASSWORD',
+            'hint' => '',
+        ];
+    }
+
+    $stateFile = $stateDir . '/admin-password';
+    if (is_readable($stateFile)) {
+        return [
+            'active' => true,
+            'source' => 'state/admin-password',
+            'hint' => '',
+        ];
+    }
+
+    $hint = is_dir(nv5_host_env_dir($siteRoot))
+        ? 'Mappen env/env-nv5 finnes, men NV5_ADMIN_PASSWORD mangler eller er ikke lesbar for PHP.'
+        : 'Fant ikke env/env-nv5 ved siden av www/. Opprett filen NV5_ADMIN_PASSWORD der (én linje med passord).';
+
+    return [
+        'active' => false,
+        'source' => '',
+        'hint' => $hint,
+    ];
+}
+
+/**
+ * @param array{param:string,server:bool,shared:bool,admin:bool,sis:bool,reise:bool,all:bool} $sync
+ */
+function nv5_admin_sync_notice(string $siteRoot, string $stateDir, array $sync, int $retryAfter): string
+{
+    $param = $sync['param'];
+    if ($param === '') {
+        return '';
+    }
+
+    $parts = ['Sync-forespørsel <code>' . htmlspecialchars($param, ENT_QUOTES, 'UTF-8') . '</code> er behandlet.'];
+    if ($retryAfter > 0) {
+        $parts[] = 'Noe ble hoppet over (rate limit eller manglende nøkkel). Prøv igjen om '
+            . (int) $retryAfter . ' s.';
+    }
+
+    if (in_array($param, ['server', 'env', 'all'], true)) {
+        $secret = nv5_sync_server_secret($siteRoot, $stateDir);
+        $providedKey = isset($_GET['key']) ? (string) $_GET['key'] : '';
+        if ($secret !== '' && ($providedKey === '' || !hash_equals($secret, $providedKey))) {
+            $parts[] = 'Server-sync krever riktig <code>?key=</code> (NV5_SYNC_SERVER_KEY).';
+        } elseif (!$sync['server'] && $retryAfter > 0) {
+            $parts[] = 'Server-sync ble ikke kjørt nå.';
+        } else {
+            $parts[] = 'Server er på siste GitHub-versjon (eller ble nettopp oppdatert).';
+        }
+    }
+
+    return implode(' ', $parts);
+}
+
+function nv5_build_admin_notice(string $siteRoot, string $stateDir, array $sync, int $retryAfter): string
+{
+    $auth = nv5_admin_password_status($siteRoot, $stateDir);
+    $lines = [];
+
+    if ($auth['active']) {
+        $lines[] = '<strong>Admin-passord:</strong> aktiv (' . htmlspecialchars($auth['source'], ENT_QUOTES, 'UTF-8') . ').';
+    } else {
+        $lines[] = '<strong>Admin-passord:</strong> ikke satt. '
+            . htmlspecialchars($auth['hint'], ENT_QUOTES, 'UTF-8')
+            . ' Sync henter <em>ikke</em> passord fra GitHub — du må opprette filen på serveren.';
+    }
+
+    $syncLine = nv5_admin_sync_notice($siteRoot, $stateDir, $sync, $retryAfter);
+    if ($syncLine !== '') {
+        $lines[] = $syncLine;
+    }
+
+    $body = implode('<br>', $lines);
+    return '<div class="admin__notice" role="status" style="margin:0 0 1.25rem;padding:.85rem 1rem;border-radius:.5rem;background:#152238;border:1px solid #2d4570;color:#dbe7ff;font-size:.95rem;line-height:1.55">'
+        . $body
+        . '</div>';
 }
 
 /**
@@ -1190,7 +1305,7 @@ function nv5_render_app(string $appId, array $paths): void
     echo $html;
 }
 
-function nv5_render_admin(array $paths): void
+function nv5_render_admin(array $paths, array $context = []): void
 {
     $htmlFile = $paths['admin_content'] . '/index.html';
     if (!is_file($htmlFile)) {
@@ -1206,13 +1321,31 @@ function nv5_render_admin(array $paths): void
         $html = preg_replace('/<head[^>]*>/i', '$0' . "\n    " . $base, $html, 1) ?? $html;
     }
 
+    $auth = nv5_admin_password_status(
+        (string) ($context['site_root'] ?? $paths['site_root']),
+        (string) ($context['state_dir'] ?? '')
+    );
     $html = nv5_inject_meta($html, [
         'nv5-server-sha' => nv5_read_sha_file($paths['server_sha']),
         'nv5-shared-sha' => nv5_read_sha_file($paths['shared_sha']),
         'nv5-sis-sha' => nv5_read_sha_file($paths['apps']['sis']['sha']),
         'nv5-reise-sha' => nv5_read_sha_file($paths['apps']['reise']['sha']),
+        'nv5-admin-auth' => $auth['active'] ? 'on' : 'off',
     ]);
     $html = nv5_bust_asset_urls($html, nv5_asset_version($paths['admin_sha'], $paths['admin_content']));
+
+    if (($context['site_root'] ?? '') !== '' && ($context['state_dir'] ?? '') !== '') {
+        $notice = nv5_build_admin_notice(
+            (string) $context['site_root'],
+            (string) $context['state_dir'],
+            is_array($context['sync'] ?? null) ? $context['sync'] : ['param' => '', 'server' => false, 'shared' => false, 'admin' => false, 'sis' => false, 'reise' => false, 'all' => false],
+            (int) ($context['retry_after'] ?? 0)
+        );
+        $replaced = preg_replace('/(<header class="admin__header">.*?<\/header>)/s', '$1' . "\n\n      " . $notice, $html, 1);
+        if (is_string($replaced)) {
+            $html = $replaced;
+        }
+    }
 
     nv5_send_security_headers();
     header('Content-Type: text/html; charset=utf-8');
