@@ -30,42 +30,48 @@
         <form class="reise__search search-card" id="tripForm" aria-label="Søk reise">
           <div class="reise__field">
             <label class="reise__label" for="fromSearch">Fra</label>
-            <input
-              type="search"
-              id="fromSearch"
-              placeholder="F.eks. Tveita T"
-              autocomplete="off"
-              enterkeyhint="search"
-            />
-            <ul class="reise__results" id="fromResults" hidden></ul>
+            <div class="reise__field-body">
+              <input
+                type="search"
+                id="fromSearch"
+                placeholder="F.eks. Tveita T"
+                autocomplete="off"
+                enterkeyhint="search"
+              />
+              <ul class="reise__results" id="fromResults" hidden></ul>
+            </div>
           </div>
 
           <div class="reise__field">
-            <div class="reise__label-row">
-              <label class="reise__label" for="toSearch">Til</label>
-              <button type="button" class="reise__swap" id="swapStops" title="Bytt fra og til">
-                ⇅ Bytt
-              </button>
+            <label class="reise__label" for="toSearch">Til</label>
+            <div class="reise__field-body">
+              <div class="reise__input-row">
+                <input
+                  type="search"
+                  id="toSearch"
+                  placeholder="F.eks. Majorstuen"
+                  autocomplete="off"
+                  enterkeyhint="search"
+                />
+                <button type="button" class="reise__swap" id="swapStops" title="Bytt fra og til">
+                  ⇅ Bytt
+                </button>
+              </div>
+              <ul class="reise__results" id="toResults" hidden></ul>
             </div>
-            <input
-              type="search"
-              id="toSearch"
-              placeholder="F.eks. Majorstuen"
-              autocomplete="off"
-              enterkeyhint="search"
-            />
-            <ul class="reise__results" id="toResults" hidden></ul>
           </div>
 
           <div class="reise__field">
-            <span class="reise__label">Avreise</span>
-            <div class="reise__when" role="group" aria-label="Avreisetidspunkt">
-              <button type="button" class="reise__when-btn is-active" data-when="now">Nå</button>
-              <button type="button" class="reise__when-btn" data-when="depart">Velg tid</button>
-            </div>
-            <div class="reise__datetime" id="tripDateTimeWrap" hidden>
-              <input type="date" id="tripDate" aria-label="Dato" />
-              <input type="time" id="tripTime" aria-label="Tidspunkt" />
+            <span class="reise__label" id="tripWhenLabel">Avr</span>
+            <div class="reise__field-body">
+              <div class="reise__when" role="group" aria-labelledby="tripWhenLabel">
+                <button type="button" class="reise__when-btn is-active" data-when="now">Nå</button>
+                <button type="button" class="reise__when-btn" data-when="depart">Velg tid</button>
+              </div>
+              <div class="reise__datetime" id="tripDateTimeWrap" hidden>
+                <input type="date" id="tripDate" aria-label="Dato" />
+                <input type="time" id="tripTime" aria-label="Tidspunkt" />
+              </div>
             </div>
           </div>
 
