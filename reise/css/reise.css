@@ -491,21 +491,6 @@
   border-color: color-mix(in srgb, currentColor 18%, transparent);
 }
 
-.trip-route-chip__icon {
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex: 0 0 auto;
-  color: inherit;
-  opacity: 0.9;
-}
-
-.trip-route-chip__svg {
-  display: block;
-  width: 0.95rem;
-  height: 0.95rem;
-}
-
 .trip-route-chip__mode {
   flex: 0 0 auto;
   width: 1rem;
@@ -521,13 +506,15 @@
 }
 
 .trip-route-chip__mode--bus,
-.trip-route-chip__mode--rail {
+.trip-route-chip__mode--rail,
+.trip-route-chip__mode--walk {
   position: relative;
   background: color-mix(in srgb, #fff 22%, transparent);
 }
 
 .trip-route-chip__mode--bus::before,
-.trip-route-chip__mode--rail::before {
+.trip-route-chip__mode--rail::before,
+.trip-route-chip__mode--walk::before {
   content: "";
   display: block;
   width: 0.62rem;
@@ -551,6 +538,11 @@
   -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath fill='%23000' d='M2 10.5V6.2c0-.8.5-1.5 1.2-1.8L7.2 2.6a1.5 1.5 0 0 0 1.6 0l3.9 1.8c.8.3 1.3 1 1.3 1.8v4.3a1.5 1.5 0 0 1-1.5 1.5h-.55l.35 1.05a.6.6 0 1 1-1.14.38L10.62 12H5.38l-.34 1.03a.6.6 0 1 1-1.14-.38L4.05 12H4A1.5 1.5 0 0 1 2.5 10.5zm2.1-5.7L3.5 6.3V10h9V6.3L11.9 4.8 8.7 3.3a.5.5 0 0 0-.4 0L4.1 4.8zM5 11.25a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5zm6 0a.75.75 0 1 0 0-1.5.75.75 0 0 0 0 1.5z'/%3E%3C/svg%3E");
 }
 
+.trip-route-chip__mode--walk::before {
+  mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13.5 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM7.9 8.3 6 13.5V22h2.5v-6h1.8l1.2 6H14l-1.5-7.5 2.2-2V9.6l-2.8 1-1.2-4.5c-.3-1-1.2-1.7-2.3-1.7-.3 0-.6.05-.9.15L4 9.1V13h2V9.6l1.9-.3Z'/%3E%3C/svg%3E");
+  -webkit-mask-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24'%3E%3Cpath fill='%23000' d='M13.5 5.5a2 2 0 1 0 0-4 2 2 0 0 0 0 4ZM7.9 8.3 6 13.5V22h2.5v-6h1.8l1.2 6H14l-1.5-7.5 2.2-2V9.6l-2.8 1-1.2-4.5c-.3-1-1.2-1.7-2.3-1.7-.3 0-.6.05-.9.15L4 9.1V13h2V9.6l1.9-.3Z'/%3E%3C/svg%3E");
+}
+
 .trip-route-chip__label {
   flex: 0 1 auto;
 }
@@ -566,6 +558,114 @@
 
 .trip-route-link--dashed {
   border-top-style: dashed;
+}
+
+/* —— Trip detail modal —— */
+
+body.trip-modal-open {
+  overflow: hidden;
+}
+
+.trip-modal {
+  position: fixed;
+  inset: 0;
+  z-index: 40;
+  display: flex;
+  align-items: flex-end;
+  justify-content: center;
+}
+
+.trip-modal[hidden] {
+  display: none;
+}
+
+.trip-modal__backdrop {
+  position: absolute;
+  inset: 0;
+  background: rgba(4, 8, 16, 0.62);
+}
+
+.trip-modal__panel {
+  position: relative;
+  z-index: 1;
+  width: min(100%, 42rem);
+  max-height: min(88vh, 100%);
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--line);
+  border-bottom: none;
+  border-radius: var(--reise-radius) var(--reise-radius) 0 0;
+  background: var(--reise-surface);
+  box-shadow: var(--reise-shadow);
+}
+
+.trip-modal__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 0.9rem 0.65rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.trip-modal__title {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+  font-variant-numeric: tabular-nums;
+}
+
+.trip-modal__close {
+  appearance: none;
+  flex: 0 0 auto;
+  width: 2rem;
+  height: 2rem;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--bg) 70%, transparent);
+  color: var(--muted);
+  font-size: 1.35rem;
+  line-height: 1;
+  cursor: pointer;
+}
+
+.trip-modal__close:hover,
+.trip-modal__close:focus-visible {
+  color: var(--text);
+  border-color: var(--reise-focus);
+}
+
+.trip-modal__body {
+  overflow: auto;
+  padding: 0.75rem 0.85rem 1rem;
+  -webkit-overflow-scrolling: touch;
+}
+
+.trip-modal__summary {
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  margin-bottom: 0.75rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--line);
+}
+
+.trip-modal__summary .trip-route-strip {
+  grid-column: auto;
+  grid-row: auto;
+}
+
+.trip-modal__duration {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: var(--accent);
+}
+
+.trip-modal__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.35rem;
 }
 
 /* —— Timeline (inspirert av travel leg, egen NV5-tolkning) —— */

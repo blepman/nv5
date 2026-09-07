@@ -26,6 +26,10 @@
     tripDate: document.getElementById("tripDate"),
     tripTime: document.getElementById("tripTime"),
     whenButtons: document.querySelectorAll(".reise__when-btn"),
+    tripModal: document.getElementById("tripModal"),
+    tripModalTitle: document.getElementById("tripModalTitle"),
+    tripModalBody: document.getElementById("tripModalBody"),
+    tripModalClose: document.getElementById("tripModalClose"),
   };
 
   var state = {
@@ -388,10 +392,7 @@
   function renderWalkChip(leg) {
     return (
       '<span class="trip-route-chip trip-route-chip--walk" role="listitem">' +
-      '<span class="trip-route-chip__icon" aria-hidden="true">' +
-      '<svg class="trip-route-chip__svg" viewBox="0 0 16 16" focusable="false">' +
-      '<path fill="currentColor" d="M8.15 1.4a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zm-1.2 3.2h1.35l.75 2.45 1.25-.45.85 2.65 1.15-.45-.55-1.55 1.25-.4.45 1.3 1.05-.45-1.35-3.65-1.35.5-.75-2.45-1.15-.3-1.45 1.15-2.15 2.4-.75-1.45-1.25-1.35 1.05-1.05 1.35.65 1.35-1.05-1.75-1.05-2.1 1.05-2.1-1.35z"/>' +
-      "</svg></span>" +
+      '<span class="trip-route-chip__mode trip-route-chip__mode--walk" aria-hidden="true"></span>' +
       '<span class="trip-route-chip__label">' +
       escapeHtml(String(walkChipMinutes(leg))) +
       "</span></span>"
@@ -575,6 +576,58 @@
     return html.join("");
   }
 
+  function patternModalTitle(pattern) {
+    return (
+      formatClock(pattern.startTime) +
+      " – " +
+      formatClock(pattern.endTime)
+    );
+  }
+
+  function renderModalContent(pattern) {
+    return (
+      '<div class="trip-modal__summary">' +
+      '<p class="trip-modal__duration">' +
+      escapeHtml(formatDuration(pattern.duration)) +
+      "</p>" +
+      renderPatternRoute(pattern) +
+      '<div class="trip-modal__meta">' +
+      renderMetaPills(pattern) +
+      "</div></div>" +
+      '<ol class="trip-timeline">' +
+      renderLegs(pattern) +
+      "</ol>"
+    );
+  }
+
+  function openPatternModal(index) {
+    var pattern = state.patterns[index];
+    if (!pattern || !els.tripModal || !els.tripModalBody || !els.tripModalTitle) {
+      return;
+    }
+    state.expandedIndex = index;
+    els.tripModalTitle.textContent = patternModalTitle(pattern);
+    els.tripModalBody.innerHTML = renderModalContent(pattern);
+    els.tripModal.hidden = false;
+    document.body.classList.add("trip-modal-open");
+    if (els.tripModalClose) {
+      els.tripModalClose.focus();
+    }
+    renderPatterns();
+  }
+
+  function closePatternModal() {
+    state.expandedIndex = -1;
+    if (els.tripModal) {
+      els.tripModal.hidden = true;
+    }
+    if (els.tripModalBody) {
+      els.tripModalBody.innerHTML = "";
+    }
+    document.body.classList.remove("trip-modal-open");
+    renderPatterns();
+  }
+
   function renderPatterns() {
     if (!els.tripResults) {
       return;
@@ -592,9 +645,9 @@
           '">' +
           '<button type="button" class="trip-card__header" data-pattern="' +
           index +
-          '" aria-expanded="' +
+          '" aria-haspopup="dialog" aria-expanded="' +
           (expanded ? "true" : "false") +
-          '">' +
+          '" aria-controls="tripModal">' +
           '<div class="trip-card__schedule">' +
           '<div class="trip-card__times">' +
           '<time class="trip-card__dep" datetime="' +
@@ -621,11 +674,6 @@
           "</div>" +
           '<span class="trip-card__chevron" aria-hidden="true">›</span>' +
           "</button>" +
-          (expanded
-            ? '<div class="trip-card__details"><ol class="trip-timeline">' +
-              renderLegs(pattern) +
-              "</ol></div>"
-            : "") +
           "</article>"
         );
       })
@@ -660,8 +708,7 @@
 
     setStatus("Søker reiser…", false);
     state.patterns = [];
-    state.expandedIndex = -1;
-    renderPatterns();
+    closePatternModal();
 
     try {
       var patterns = await window.NV5Entur.planTrip(
@@ -675,7 +722,7 @@
         return;
       }
       state.patterns = patterns;
-      state.expandedIndex = -1;
+      closePatternModal();
       setStatus("");
       renderPatterns();
       saveSettings();
@@ -802,10 +849,31 @@
           return;
         }
         var index = Number(btn.getAttribute("data-pattern"));
-        state.expandedIndex = state.expandedIndex === index ? -1 : index;
-        renderPatterns();
+        if (state.expandedIndex === index) {
+          closePatternModal();
+        } else {
+          openPatternModal(index);
+        }
       });
     }
+
+    if (els.tripModal) {
+      els.tripModal.addEventListener("click", function (event) {
+        if (event.target.closest("[data-close-modal]")) {
+          closePatternModal();
+        }
+      });
+    }
+
+    if (els.tripModalClose) {
+      els.tripModalClose.addEventListener("click", closePatternModal);
+    }
+
+    document.addEventListener("keydown", function (event) {
+      if (event.key === "Escape" && els.tripModal && !els.tripModal.hidden) {
+        closePatternModal();
+      }
+    });
 
     document.addEventListener("click", function (event) {
       if (
