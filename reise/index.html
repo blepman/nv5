@@ -89,6 +89,24 @@
         <div class="reise__results-wrap" id="tripResults" aria-live="polite"></div>
       </main>
 
+      <div class="trip-modal" id="tripModal" hidden>
+        <div class="trip-modal__backdrop" data-close-modal tabindex="-1" aria-hidden="true"></div>
+        <div
+          class="trip-modal__panel"
+          role="dialog"
+          aria-modal="true"
+          aria-labelledby="tripModalTitle"
+        >
+          <header class="trip-modal__header">
+            <h2 class="trip-modal__title" id="tripModalTitle"></h2>
+            <button type="button" class="trip-modal__close" id="tripModalClose" aria-label="Lukk">
+              ×
+            </button>
+          </header>
+          <div class="trip-modal__body" id="tripModalBody"></div>
+        </div>
+      </div>
+
       <footer class="reise__footer">
         <a class="reise__link" href="/sis/">← NV5 SIS sanntidstavle</a>
         <button type="button" class="reise__sync" id="syncReise" title="Hent Reise fra GitHub">
@@ -102,6 +120,6 @@
     <script src="config.js" defer></script>
     <script src="/shared/js/entur.js" defer></script>
     <script src="js/site.js" defer></script>
-    <script src="js/plan.js?v=2026-09-07l" defer></script>
+    <script src="js/plan.js?v=2026-09-07m" defer></script>
   </body>
 </html>
