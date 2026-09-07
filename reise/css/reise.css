@@ -105,17 +105,23 @@
 
 .reise__label {
   flex: 0 0 auto;
-  min-width: 1.65rem;
-  font-size: 0.72rem;
+  display: inline-flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 0.05rem;
+  min-width: 1rem;
+  font-size: 0.7rem;
   color: var(--muted);
   font-weight: 700;
-  letter-spacing: 0.06em;
-  line-height: 1.05;
+  letter-spacing: 0.05em;
   text-transform: uppercase;
-  text-align: center;
-  writing-mode: vertical-lr;
-  transform: rotate(180deg);
   user-select: none;
+}
+
+.reise__label > span {
+  display: block;
+  line-height: 1;
 }
 
 .reise__field input[type="search"],

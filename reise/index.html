@@ -29,7 +29,9 @@
       <main class="reise__main">
         <form class="reise__search search-card" id="tripForm" aria-label="Søk reise">
           <div class="reise__field">
-            <label class="reise__label" for="fromSearch">Fra</label>
+            <label class="reise__label" for="fromSearch" aria-label="Fra">
+              <span>F</span><span>r</span><span>a</span>
+            </label>
             <div class="reise__field-body">
               <input
                 type="search"
@@ -43,7 +45,9 @@
           </div>
 
           <div class="reise__field">
-            <label class="reise__label" for="toSearch">Til</label>
+            <label class="reise__label" for="toSearch" aria-label="Til">
+              <span>T</span><span>i</span><span>l</span>
+            </label>
             <div class="reise__field-body">
               <div class="reise__input-row">
                 <input
@@ -62,7 +66,9 @@
           </div>
 
           <div class="reise__field">
-            <span class="reise__label" id="tripWhenLabel">Avr</span>
+            <span class="reise__label" id="tripWhenLabel" aria-label="Avreise">
+              <span>A</span><span>v</span><span>r</span>
+            </span>
             <div class="reise__field-body">
               <div class="reise__when" role="group" aria-labelledby="tripWhenLabel">
                 <button type="button" class="reise__when-btn is-active" data-when="now">Nå</button>
