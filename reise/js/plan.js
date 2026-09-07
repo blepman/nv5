@@ -215,9 +215,7 @@
 
   function patternMetaParts(pattern) {
     var parts = [];
-    if (pattern.changes <= 2) {
-      parts.push(changesLabel(pattern.changes));
-    }
+    parts.push(changesLabel(pattern.changes));
     if (pattern.walkDuration >= 60) {
       parts.push(formatDuration(pattern.walkDuration) + " gange");
     } else if (pattern.walkDistance > 0) {
@@ -237,11 +235,6 @@
       .join("");
   }
 
-  function transitLegs(pattern) {
-    return (pattern.legs || []).filter(function (leg) {
-      return leg.mode !== "foot";
-    });
-  }
 
   function setStatus(message, isError) {
     if (!els.tripStatus) {
@@ -361,63 +354,94 @@
     return quayPlatformLabel(name, quayCode) || name || "";
   }
 
-  function renderRouteBadge(leg) {
-    var code = leg.lineCode || modeLabel(leg.transportMode || leg.mode);
+
+  function walkChipMinutes(leg) {
+    return Math.max(1, Math.round(Number(leg.duration || 0) / 60));
+  }
+
+  function routeConnectorClass(previousLeg, leg) {
+    if (!previousLeg || !leg) {
+      return "";
+    }
+    var previousWalk = previousLeg.mode === "foot";
+    var currentWalk = leg.mode === "foot";
+    if (previousWalk !== currentWalk) {
+      return " trip-route-link--dashed";
+    }
+    return "";
+  }
+
+  function transitModeMark(leg) {
+    var mode = String(leg.transportMode || leg.mode || "").toLowerCase();
+    if (mode === "metro" || mode === "tram") {
+      return '<span class="trip-route-chip__mode" aria-hidden="true">T</span>';
+    }
+    if (mode === "bus") {
+      return '<span class="trip-route-chip__mode trip-route-chip__mode--bus" aria-hidden="true"></span>';
+    }
+    if (mode === "rail" || mode === "train") {
+      return '<span class="trip-route-chip__mode trip-route-chip__mode--rail" aria-hidden="true"></span>';
+    }
+    return "";
+  }
+
+  function renderWalkChip(leg) {
     return (
-      '<span class="trip-route-tag__badge"' +
-      lineStyleAttr(leg) +
-      ">" +
-      escapeHtml(code) +
-      "</span>"
+      '<span class="trip-route-chip trip-route-chip--walk" role="listitem">' +
+      '<span class="trip-route-chip__icon" aria-hidden="true">' +
+      '<svg class="trip-route-chip__svg" viewBox="0 0 16 16" focusable="false">' +
+      '<path fill="currentColor" d="M8.15 1.4a1.25 1.25 0 1 1 0 2.5 1.25 1.25 0 0 1 0-2.5zm-1.2 3.2h1.35l.75 2.45 1.25-.45.85 2.65 1.15-.45-.55-1.55 1.25-.4.45 1.3 1.05-.45-1.35-3.65-1.35.5-.75-2.45-1.15-.3-1.45 1.15-2.15 2.4-.75-1.45-1.25-1.35 1.05-1.05 1.35.65 1.35-1.05-1.75-1.05-2.1 1.05-2.1-1.35z"/>' +
+      "</svg></span>" +
+      '<span class="trip-route-chip__label">' +
+      escapeHtml(String(walkChipMinutes(leg))) +
+      "</span></span>"
     );
   }
 
-  function renderRouteTag(leg) {
-    var dest = String(leg.lineDestination || "").trim();
+  function renderTransitChip(leg) {
     return (
-      '<span class="trip-route-tag">' +
-      renderRouteBadge(leg) +
-      (dest
-        ? '<span class="trip-route-tag__dest">' + escapeHtml(dest) + "</span>"
-        : "") +
-      "</span>"
+      '<span class="trip-route-chip trip-route-chip--transit" role="listitem"' +
+      lineStyleAttr(leg) +
+      ">" +
+      transitModeMark(leg) +
+      '<span class="trip-route-chip__label">' +
+      escapeHtml(legBadgeText(leg)) +
+      "</span></span>"
+    );
+  }
+
+  function renderRouteChip(leg) {
+    if (leg.mode === "foot") {
+      return renderWalkChip(leg);
+    }
+    return renderTransitChip(leg);
+  }
+
+  function renderRouteLink(previousLeg, leg) {
+    return (
+      '<span class="trip-route-link' +
+      routeConnectorClass(previousLeg, leg) +
+      '" aria-hidden="true"></span>'
     );
   }
 
   function renderPatternRoute(pattern) {
-    var transit = transitLegs(pattern);
-    if (pattern.changes > 2) {
-      var first = transit[0];
-      var last = transit.length > 1 ? transit[transit.length - 1] : null;
-      var parts = [];
-      if (first) {
-        parts.push('<span class="trip-route-tag">' + renderRouteBadge(first) + "</span>");
-      }
-      parts.push(
-        '<span class="trip-card__route-compact">' +
-          escapeHtml(changesLabel(pattern.changes)) +
-          "</span>"
-      );
-      if (last && last !== first) {
-        parts.push('<span class="trip-route-tag">' + renderRouteBadge(last) + "</span>");
-      }
-      return (
-        '<div class="trip-card__route-tags trip-card__route-tags--compact">' +
-        parts.join('<span class="trip-route-sep" aria-hidden="true">→</span>') +
-        "</div>"
-      );
-    }
-    if (!transit.length) {
+    var legs = pattern.legs || [];
+    if (!legs.length) {
       return "";
     }
-    var tags = [];
-    transit.forEach(function (leg, index) {
+    var parts = [];
+    legs.forEach(function (leg, index) {
       if (index > 0) {
-        tags.push('<span class="trip-route-sep" aria-hidden="true">→</span>');
+        parts.push(renderRouteLink(legs[index - 1], leg));
       }
-      tags.push(renderRouteTag(leg));
+      parts.push(renderRouteChip(leg));
     });
-    return '<div class="trip-card__route-tags">' + tags.join("") + "</div>";
+    return (
+      '<div class="trip-route-strip" role="list" aria-label="Rute">' +
+      parts.join("") +
+      "</div>"
+    );
   }
 
   function legRoute(leg) {
